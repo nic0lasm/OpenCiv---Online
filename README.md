@@ -74,6 +74,8 @@ code are: start with the [Unciv docs](https://yairm210.github.io/Unciv/) and its
 [Discord](https://discord.gg/bjrB4Xw). Fixes that make sense for everyone will be offered back to
 Unciv.
 
+How to report a bug, pick a task and send a pull request: see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License and credits
 
 This fork keeps Unciv's licensing as is.

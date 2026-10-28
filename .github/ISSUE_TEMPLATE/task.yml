@@ -1,0 +1,36 @@
+name: Roadmap task
+description: A concrete piece of work for one of the versions in the roadmap
+labels: [task]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For work that fits the [roadmap](https://github.com/nic0lasm/OpenCiv---Online#roadmap).
+        Keep it small enough for one pull request if you can.
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      options:
+        - Version 0 (streaming demo)
+        - Version 2 (platform layers)
+        - Version 3 (multiplayer)
+        - Version 4 (polish and release)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What needs doing
+      description: The context, and where in the code it happens if you know.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How we'll know it's finished. Something anyone can check.
+    validations:
+      required: true

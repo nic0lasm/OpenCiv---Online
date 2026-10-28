@@ -77,6 +77,8 @@ les gens qui connaissent ce code : commencez par la [documentation d'Unciv](http
 et son [Discord](https://discord.gg/bjrB4Xw). Les corrections utiles à tout le monde seront proposées
 à Unciv.
 
+Pour signaler un bug, choisir une tâche ou proposer une pull request, voir [CONTRIBUTING.fr.md](CONTRIBUTING.fr.md).
+
 ## Licence et crédits
 
 Ce fork garde les licences d'Unciv telles quelles.

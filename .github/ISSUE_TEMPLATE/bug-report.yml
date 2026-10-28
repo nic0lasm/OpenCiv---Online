@@ -1,69 +1,70 @@
-name: Bug Report
-description: Create a report to help us fix the game
+name: Bug in the web version
+description: Something breaks when playing in the browser (web build or streaming demo)
 labels: [bug]
 
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for filing a bug report!
-        We know that filling this form out in full takes time, but we are also busy, unpaid volunteers--the more details you can provide, the smoother things will go.
+        Thanks for taking the time. Before you start: if the same thing happens in the official Unciv
+        on desktop or Android, please report it [upstream](https://github.com/yairm210/Unciv/issues) instead.
+        This repo only deals with what's specific to running the game in a browser.
   - type: checkboxes
     attributes:
-      label: Is there an existing issue for this?
-      description: Please search to see if an issue already exists for the bug you encountered.
+      label: Checks
       options:
-      - label: I have searched the existing issues
-        required: true
-  - type: input
+        - label: I searched the existing issues and didn't find this one
+          required: true
+  - type: dropdown
+    id: build
     attributes:
-      label: Game Version
-      description: What game version are you running?
-      placeholder: "4.7.5"
+      label: Which version were you playing?
+      options:
+        - Web build (the game runs in the page)
+        - Streaming demo (Docker + noVNC)
+        - Not sure
     validations:
       required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and system
+      placeholder: "Chrome 130 on Windows 11, Safari on iPad..."
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or link
+      description: The commit you built from, or the URL you played on.
+      placeholder: "07330ca, or https://..."
   - type: textarea
     id: description
     attributes:
-      label: Describe the bug
-      description: Provide a clear and concise description of what the bug is.
+      label: What happened
+      description: What you expected, and what you got instead.
     validations:
       required: true
   - type: textarea
-    id: reproduction
+    id: steps
     attributes:
-      label: Steps to Reproduce
-      description: How can others reproduce the issue?
+      label: How to get there
       value: |
-        1. Go to '...'
-        2. Click on '...'
-        3. Scroll down to '...'
-        4. See error
+        1.
+        2.
+        3.
     validations:
       required: true
   - type: textarea
+    id: console
     attributes:
-      label: Screenshots
+      label: Browser console
       description: |
-        If applicable, attach screenshots that may help others identify and resolve the issue.
-        (If you are reporting a visual bug, a screenshot is effectively required!)
+        Open the developer tools (F12), go to the Console tab and paste what's red, or the crash screen text.
+        That's usually the most useful part of the report.
+      render: text
   - type: textarea
+    id: extra
     attributes:
-      label: Link to save file
-      description: You can either upload your save here, or to e.g. hastebin / GitHub Gists
-      placeholder: Load game - "copy to clipboard" - paste here 
-  - type: dropdown
-    attributes:
-      label: Operating System
-      description: What OS do you use?
-      options:
-        - Android
-        - Windows
-        - Linux
-        - MacOS
-    validations:
-      required: true
-  - type: textarea
-    attributes:
-      label: Additional Information
-      description: Add any other context about the problem here that didn't fit into the form inputs above.
+      label: Anything else
+      description: Screenshots, a save file, whether it happens every time...

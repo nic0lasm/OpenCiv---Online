@@ -1,0 +1,69 @@
+# Labels for this repo. The "Sync labels" workflow applies this file on every push to master.
+# Labels that aren't listed here are left alone.
+
+- name: bug
+  color: d73a4a
+  description: Something breaks in the browser
+- name: idea
+  color: a2eeef
+  description: A proposal to improve the online version
+- name: task
+  color: 0e8a16
+  description: A concrete piece of roadmap work
+- name: roadmap
+  color: 5319e7
+  description: Tracks a whole version of the roadmap
+
+- name: good first issue
+  color: 7057ff
+  description: Small and well scoped, a good way to start
+- name: help wanted
+  color: 008672
+  description: Nobody is on it, jump in
+- name: needs info
+  color: fbca04
+  description: We need more details before we can act
+- name: upstream
+  color: cfd3d7
+  description: Belongs to Unciv itself, not to this fork
+- name: duplicate
+  color: cfd3d7
+  description: Already reported elsewhere
+
+- name: web build
+  color: 1d76db
+  description: The TeaVM web module
+- name: streaming
+  color: 1d76db
+  description: The Docker + noVNC demo
+- name: saves
+  color: c5def5
+  description: Saving and loading games in the browser
+- name: network
+  color: c5def5
+  description: HTTP, mods download, update checks
+- name: multiplayer
+  color: c5def5
+  description: Playing with others
+- name: performance
+  color: c5def5
+  description: Load time, download size, frame rate
+- name: docs
+  color: c5def5
+  description: README, CONTRIBUTING, build instructions
+- name: ci
+  color: c5def5
+  description: GitHub Actions and deployment
+
+- name: version 0
+  color: f9d0c4
+  description: "Roadmap: streaming demo behind HTTPS"
+- name: version 2
+  color: f9d0c4
+  description: "Roadmap: platform layers, solo game and saves"
+- name: version 3
+  color: f9d0c4
+  description: "Roadmap: multiplayer"
+- name: version 4
+  color: f9d0c4
+  description: "Roadmap: polish and release"
