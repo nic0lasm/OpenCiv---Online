@@ -4,10 +4,11 @@ pluginManagement {
     repositories {
         mavenLocal() // To get the compiler plugin locally
         gradlePluginPortal() // So other plugins can be resolved
+        mavenCentral() // gdx-teavm publishes its plugin marker there
     }
 }
 
-include("desktop", "core", "tests", "server")
+include("desktop", "core", "tests", "server", "web")
 
 private fun getSdkPath(): String? {
     val localProperties = file("local.properties")

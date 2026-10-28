@@ -1,0 +1,9 @@
+{$UNCIV_DOMAIN} {
+	encode gzip
+
+	# Landing on the root opens the noVNC client straight away
+	@root path /
+	redir @root /vnc.html?autoconnect=true&resize=remote&reconnect=true 302
+
+	reverse_proxy unciv:6901
+}

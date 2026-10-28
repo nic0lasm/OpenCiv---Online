@@ -87,7 +87,8 @@ class ViewPurityTest {
                     }
                 }
                 "jar" -> {
-                    val jarPath = resource.path.substringAfter("file:").substringBefore("!")
+                    // Decoded, or a checkout path with spaces ("%20") isn't found
+                    val jarPath = java.net.URLDecoder.decode(resource.path.substringAfter("file:").substringBefore("!"), "UTF-8")
                     JarFile(jarPath).use { jar ->
                         for (entry in jar.entries()) {
                             if (entry.isDirectory || !entry.name.startsWith("$packagePath/")) continue

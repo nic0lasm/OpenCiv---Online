@@ -77,9 +77,10 @@ class UncivFiles(
             gameName, saveFolder, preferExternalStorage, files.externalStoragePath)
         val location = "${saveFolder}/$gameName"
         val localFile = getLocalFile(location)
-        val externalFile = files.external(location)
+        // Only ask for the external file when there is external storage: the web build's Files throws otherwise
+        val externalFile = if (files.isExternalStorageAvailable) files.external(location) else null
 
-        val toReturn = if (files.isExternalStorageAvailable && (
+        val toReturn = if (externalFile != null && (
                 externalFile.exists() && !localFile.exists() || // external file is only valid choice
                 preferExternalStorage && (externalFile.exists() || !localFile.exists()) // unless local file is only valid choice, choose external
                 ) ) {
@@ -90,7 +91,8 @@ class UncivFiles(
         }
 
         toReturn.parent().mkdirs()
-        debug("Save found: %s", toReturn.file().absolutePath)
+        // Lambda + fallback: FileHandle.file() isn't available in the web build
+        debug("Save found: %s", { runCatching { toReturn.file().absolutePath }.getOrElse { toReturn.path() } })
         return toReturn
     }
 

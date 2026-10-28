@@ -196,6 +196,9 @@ object TranslationCache {
 
             private fun getNumberRegex(formatter: DecimalFormat): Regex {
                 val symbols = formatter.decimalFormatSymbols
+                // Elvis: TeaVM's DecimalFormat (web build) answers null instead of ""
+                val negativePrefix: String = formatter.negativePrefix ?: ""
+                val negativeSuffix: String = formatter.negativeSuffix ?: ""
                 val zero = symbols.zeroDigit
                 val digit =
                     if (zero == '0') "[0-9]" else "[0-9$zero-${zero + 9}]"   // ASCII plus the locale's own digits, NOT \p{Nd}, because that would re-format e.g. "２"
@@ -203,15 +206,15 @@ object TranslationCache {
                     // Since we might include a "-", a "\b" won't do:
                     // First, a look-ahead for a (unicode) digit or negativePrefix mitigates the extra cost of a look-behind.
                     append("(?=$digit")
-                    if (formatter.negativePrefix.isNotEmpty()) {
+                    if (negativePrefix.isNotEmpty()) {
                         append('|')
-                        quoted(formatter.negativePrefix)
+                        quoted(negativePrefix)
                     }
                     append(')')
                     // Now, do a look-behind for "not a (ascii) letter or digit"
                     append("(?<![A-Za-z0-9_])")
                     // Main number pattern
-                    optional(formatter.negativePrefix)
+                    optional(negativePrefix)
                     append("$digit+")
                     if (formatter.isGroupingUsed) {
                         append("(?:")
@@ -226,7 +229,7 @@ object TranslationCache {
                     append("$digit+")
                     append(")?")
                     */
-                    optional(formatter.negativeSuffix)
+                    optional(negativeSuffix)
                     // Ensure not followed by (ascii) letter or digit, more portable than "\b"
                     append("""(?![A-Za-z0-9_])""")
                 }

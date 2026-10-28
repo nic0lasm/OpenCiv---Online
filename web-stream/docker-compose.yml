@@ -1,0 +1,31 @@
+# Public deployment of the streamed desktop build: Unciv + noVNC behind Caddy (automatic HTTPS).
+# Usage: see web-stream/README.md
+services:
+  unciv:
+    build: ..
+    restart: unless-stopped
+    environment:
+      - VNC_PW=${UNCIV_VNC_PASSWORD:?set UNCIV_VNC_PASSWORD in web-stream/.env}
+      - VNC_RESOLUTION=${UNCIV_RESOLUTION:-1600x900}
+    command: /home/headless/Desktop/Unciv.sh
+    volumes:
+      - unciv-data:/home/headless/.local/share/Unciv
+    # No published ports: only Caddy talks to noVNC
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - UNCIV_DOMAIN=${UNCIV_DOMAIN:?set UNCIV_DOMAIN in web-stream/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - unciv
+
+volumes:
+  unciv-data:
+  caddy-data:

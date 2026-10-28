@@ -267,7 +267,8 @@ private fun replaceLambdasWithValues(params: Array<out Any?>): Array<out Any?> {
 @Readonly
 private fun getTag(): Tag {
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
-    val firstOutsideStacktrace = Throwable().stackTrace.first { "com.unciv.utils.Log" !in it.className }
+    val firstOutsideStacktrace = Throwable().stackTrace.firstOrNull { "com.unciv.utils.Log" !in it.className }
+        ?: return Tag("Unciv") // No stack traces in the web build
     val simpleClassName = firstOutsideStacktrace.className.substringAfterLast('.')
     return Tag(removeAnonymousSuffix(simpleClassName))
 }

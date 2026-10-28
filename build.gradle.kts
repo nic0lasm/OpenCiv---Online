@@ -133,6 +133,17 @@ project(":desktop") {
     }
 }
 
+// Browser build, compiled to JavaScript by TeaVM through gdx-teavm (see web/README.md)
+project(":web") {
+    apply(plugin = "kotlin")
+
+    dependencies {
+        "implementation"(project(":core"))
+        "implementation"(rootProject.libs.gdx)
+        "implementation"(rootProject.libs.coroutines.core)
+    }
+}
+
 // For server-side
 project(":server") {
     apply(plugin = "kotlin")
