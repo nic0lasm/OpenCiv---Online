@@ -1,12 +1,12 @@
 package com.unciv.logic.multiplayer.apiv2
 
+import com.unciv.logic.HttpEngine
 import com.unciv.UncivGame
 import com.unciv.logic.UncivShowableException
 import com.unciv.utils.Concurrency
 import com.unciv.utils.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
@@ -42,7 +42,7 @@ open class ApiV2Wrapper(baseUrl: String) {
     }.toString()
 
     // HTTP client to handle the server connections, logging, content parsing and cookies
-    internal val client = HttpClient(CIO) {
+    internal val client = HttpClient(HttpEngine.factory) {
         // Do not add install(HttpCookies) because it will break Cookie handling
         install(ContentNegotiation) {
             json(Json {

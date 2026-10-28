@@ -1,11 +1,11 @@
 package com.unciv.logic.multiplayer.chat
 
+import com.unciv.logic.HttpEngine
 import com.unciv.UncivGame
 import com.unciv.logic.multiplayer.chat.ChatWebSocket.job
 import com.unciv.logic.multiplayer.chat.ChatWebSocket.start
 import com.unciv.utils.Concurrency
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -95,7 +95,7 @@ object ChatWebSocket {
     private var session: DefaultClientWebSocketSession? = null
 
     @OptIn(ExperimentalSerializationApi::class)
-    private val client = HttpClient(CIO) {
+    private val client = HttpClient(HttpEngine.factory) {
         install(WebSockets) {
             pingInterval = 30.seconds
             contentConverter = KotlinxWebsocketSerializationConverter(Json {

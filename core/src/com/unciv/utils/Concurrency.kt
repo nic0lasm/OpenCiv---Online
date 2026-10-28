@@ -17,7 +17,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import yairm210.purity.annotations.Readonly
 import java.util.concurrent.CancellationException
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import kotlin.coroutines.CoroutineContext
@@ -164,7 +163,7 @@ object Dispatcher {
  */
 @Suppress("PrivatePropertyName", "PropertyName") // Inherited all-caps names from former dev
 private class Dispatchers {
-    private val EXECUTORS = mutableListOf<ExecutorService>()
+    private val shutdownActions = mutableListOf<() -> Unit>()
 
     /** Runs coroutines on a daemon thread pool. */
     val DAEMON: CoroutineDispatcher = createThreadpoolDispatcher("threadpool-daemon-", isDaemon = true)
@@ -176,27 +175,20 @@ private class Dispatchers {
     val GL: CoroutineDispatcher by lazy { CrashHandlingDispatcher(GLDispatcher(DAEMON)) }
 
     fun stopThreadPools() {
-        val iterator = EXECUTORS.iterator()
+        val iterator = shutdownActions.iterator()
         while (iterator.hasNext()) {
-            val executor = iterator.next()
-            executor.shutdown()
+            val shutdown = iterator.next()
+            shutdown()
             iterator.remove()
         }
     }
 
-    @Readonly fun isStopped() = EXECUTORS.isEmpty()
+    @Readonly fun isStopped() = shutdownActions.isEmpty()
 
     private fun createThreadpoolDispatcher(threadPrefix: String, isDaemon: Boolean): CrashHandlingDispatcher {
-        val executor = Executors.newCachedThreadPool(object : ThreadFactory {
-            var n = 0
-            override fun newThread(r: Runnable): Thread {
-                val thread = Thread(r, "${threadPrefix}${n++}")
-                thread.isDaemon = isDaemon
-                return thread
-            }
-        })
-        EXECUTORS.add(executor)
-        return CrashHandlingDispatcher(executor.asCoroutineDispatcher())
+        val (dispatcher, shutdown) = ThreadPools.create(threadPrefix, isDaemon)
+        shutdownActions.add(shutdown)
+        return CrashHandlingDispatcher(dispatcher)
     }
 
     private class CrashHandlingDispatcher(
@@ -229,5 +221,26 @@ private class Dispatchers {
         }
         override fun pause() {}
         override fun resume() {}
+    }
+}
+
+/**
+ * Where [Dispatchers] gets its threads from.
+ *
+ * Kept as a separate object so that a platform without threads can swap it out:
+ * the web build replaces it at compile time with a single-threaded version, see web/README.md.
+ */
+internal object ThreadPools {
+    /** @return a dispatcher backed by a new cached thread pool, and the action that shuts that pool down */
+    fun create(threadPrefix: String, isDaemon: Boolean): Pair<CoroutineDispatcher, () -> Unit> {
+        val executor = Executors.newCachedThreadPool(object : ThreadFactory {
+            var n = 0
+            override fun newThread(r: Runnable): Thread {
+                val thread = Thread(r, "${threadPrefix}${n++}")
+                thread.isDaemon = isDaemon
+                return thread
+            }
+        })
+        return executor.asCoroutineDispatcher() to { executor.shutdown() }
     }
 }
