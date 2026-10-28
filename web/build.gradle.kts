@@ -35,8 +35,12 @@ gdxTeaVM {
 
     // libGDX Json fills game objects (rulesets, settings, saves) through reflection,
     // so TeaVM must keep the metadata for those classes.
-    // reflection("com.unciv.models.**")
-    reflectionDebug.set(true)
+    // Asking for com.unciv.** at once ran TeaVM out of memory, so it's kept to what the main menu needs.
+    reflection(
+        "com.unciv.models.**",
+        "com.unciv.ui.screens.pickerscreens.PromotionScreenColors",
+    )
+    reflectionDebug.set(false)
 
     webDefaults {
         mainClass.set("com.unciv.app.web.WebLauncher")

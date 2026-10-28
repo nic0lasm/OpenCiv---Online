@@ -23,6 +23,7 @@ import org.teavm.vm.spi.TeaVMPlugin;
  *
  * For each class {@code a.b.C} listed below, the methods of {@code unciv.webpatch.a.b.C} that {@code a.b.C}
  * doesn't have yet are copied into it. Unlike a substitution, the rest of the class stays TeaVM's.
+ * For the classes in {@link #replacingClasses}, the patch methods also replace existing ones.
  */
 public class UncivTeaVMPlugin implements TeaVMPlugin {
     private static final String PATCH_PREFIX = "unciv.webpatch.";
@@ -39,7 +40,13 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         "java.security.SecureRandom",
         "java.io.File",
         "java.nio.charset.Charset",
-        "com.badlogic.gdx.graphics.Pixmap"
+        "com.badlogic.gdx.graphics.Pixmap",
+        "kotlin.ExceptionsKt__ExceptionsKt"
+    );
+
+    private static final Set<String> replacingClasses = Set.of(
+        // stackTraceToString: give the JavaScript stack, the Java one is empty
+        "kotlin.ExceptionsKt__ExceptionsKt"
     );
 
     @Override
@@ -84,7 +91,11 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
                 if (method.getName().equals("<clinit>")) continue;
                 if (method.getName().equals("<init>") && method.parameterCount() == 0) continue;
                 MethodHolder copy = renamer.rename(ModelUtils.copyMethod(method));
-                if (cls.getMethod(copy.getDescriptor()) != null) continue;
+                MethodHolder existing = cls.getMethod(copy.getDescriptor());
+                if (existing != null) {
+                    if (!replacingClasses.contains(cls.getName())) continue;
+                    cls.removeMethod(existing);
+                }
                 cls.addMethod(copy);
             }
         }

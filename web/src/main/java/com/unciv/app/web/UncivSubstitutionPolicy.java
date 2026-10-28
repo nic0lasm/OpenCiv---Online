@@ -16,6 +16,8 @@ public class UncivSubstitutionPolicy extends SimpleSubstitutionPolicy {
         // Worker threads -> the page's single thread
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.BuildersKt__BuildersKt",
+        // Needs real Java stack frames, which TeaVM doesn't have
+        "kotlinx.coroutines.internal.StackTraceRecoveryKt",
         "com.unciv.utils.ThreadPools",
         // ktor CIO engine (sockets, TLS) -> an engine without network access
         "com.unciv.logic.HttpEngine",
@@ -31,7 +33,8 @@ public class UncivSubstitutionPolicy extends SimpleSubstitutionPolicy {
         "java.net.ConnectException",
         "java.nio.file.attribute.DosFileAttributes",
         "java.security.MessageDigest",
-        "java.text.Collator"
+        "java.text.Collator",
+        "java.awt.Rectangle"
     );
 
     @Override

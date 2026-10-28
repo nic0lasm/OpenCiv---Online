@@ -27,6 +27,10 @@ public class WebLogBackend extends DefaultLogBackend {
         return "Browser: " + userAgent();
     }
 
+    /** Logs with the JavaScript call stack, which is all we get for "where was this called from" in the browser. */
+    @JSBody(params = "msg", script = "console.log(msg + \"\\n\" + new Error().stack);")
+    public static native void trace(String msg);
+
     @JSBody(params = "msg", script = "console.log(msg);")
     private static native void consoleLog(String msg);
 

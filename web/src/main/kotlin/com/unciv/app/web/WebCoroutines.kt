@@ -21,7 +21,11 @@ object WebCoroutines {
         val fullContext = if (context[ContinuationInterceptor] == null) context + WebDispatcher else context
         val deferred = GlobalScope.async(fullContext, block = block)
         while (!deferred.isCompleted && WebDispatcher.runNext()) Unit
-        check(deferred.isCompleted) { "runBlocking: the block waits for something that can't happen while we block (timer, network or GL thread)" }
+        if (!deferred.isCompleted) {
+            val message = "runBlocking: the block waits for something that can't happen while we block (timer, network or GL thread)"
+            WebLogBackend.trace(message)
+            throw IllegalStateException(message)
+        }
         return deferred.getCompleted()
     }
 }
