@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.teavm.gradle.api.OptimizationLevel
 
 // Browser build. Kotlin bytecode from core is translated to JavaScript by TeaVM,
@@ -13,13 +14,20 @@ plugins {
     id("com.github.xpenatan.gdx-teavm") version "1.6.2"
 }
 
+// gdx-teavm and the TeaVM class library need 17, the code TeaVM translates can still be Java 8
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release.set(8)
+    options.release.set(17)
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
 }
 
 gdxTeaVM {
@@ -27,19 +35,16 @@ gdxTeaVM {
 
     // libGDX Json fills game objects (rulesets, settings, saves) through reflection,
     // so TeaVM must keep the metadata for those classes.
-    reflection(
-        "com.unciv.models.**",
-        "com.unciv.logic.**",
-        "com.unciv.ui.components.fonts.FontFamilyData",
-        "com.unciv.json.**",
-    )
+    // reflection("com.unciv.models.**")
+    reflectionDebug.set(true)
 
     webDefaults {
         mainClass.set("com.unciv.app.web.WebLauncher")
         htmlTitle.set("Unciv")
         optimization.set(OptimizationLevel.NONE)
         obfuscated.set(false)
-        processMemory.set(4096)
+        outOfProcess.set(true)
+        processMemory.set(8192)
     }
 
     js {}

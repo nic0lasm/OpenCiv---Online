@@ -135,7 +135,7 @@ project(":desktop") {
 
 // Browser build, compiled to JavaScript by TeaVM through gdx-teavm (see web/README.md)
 project(":web") {
-    apply(plugin = "java")
+    apply(plugin = "kotlin")
 
     dependencies {
         "implementation"(project(":core"))
