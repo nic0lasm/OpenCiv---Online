@@ -1,0 +1,28 @@
+name: Idea for the online version
+description: Something that would make the browser version better (loading, controls, hosting, playing with friends...)
+labels: [idea]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas about the game rules or new gameplay belong [upstream](https://github.com/yairm210/Unciv/issues):
+        this fork keeps the game as it is and only works on bringing it to the web.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the problem?
+      description: What bothers you today, or what you'd like to be able to do.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What you have in mind
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Other options you thought about, links, mock-ups...

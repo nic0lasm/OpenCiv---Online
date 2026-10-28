@@ -23,6 +23,6 @@ jobs:
           days-before-pr-stale: 45
           days-before-issue-close: 15
           days-before-pr-close: 10
-          exempt-issue-labels: 'Will not stale'
+          exempt-issue-labels: 'Will not stale,roadmap,task'
           exempt-pr-labels: 'Will not stale'
           operations-per-run: 2500
