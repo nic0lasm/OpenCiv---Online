@@ -6,9 +6,12 @@ services:
     ports:
       - "6901:6901"
       - "5901:5901"
+    environment:
+      # Change it before exposing the container anywhere but localhost
+      - VNC_PW=${UNCIV_VNC_PASSWORD:-headless}
     command: /home/headless/Desktop/Unciv.sh
     volumes:
-      unciv-data: /home/headless/.local/share/Unciv
+      - unciv-data:/home/headless/.local/share/Unciv
 
 volumes:
   unciv-data:
