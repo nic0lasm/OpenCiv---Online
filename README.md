@@ -1,5 +1,7 @@
 # OpenCiv Online
 
+English | [Français](README.fr.md)
+
 ![](/extraImages/GithubPreviewImage.jpg)
 
 OpenCiv Online is a fork of [Unciv](https://github.com/yairm210/Unciv) with one goal: play it in a
