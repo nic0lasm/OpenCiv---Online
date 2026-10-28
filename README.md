@@ -1,136 +1,93 @@
-# Unciv - Civ V remake for Android & Desktop
+# OpenCiv Online
 
 ![](/extraImages/GithubPreviewImage.jpg)
 
-[![Google Play](https://img.shields.io/static/v1?label=Google&message=Play&logo=google-play)](https://play.google.com/store/apps/details?id=com.unciv.app)
-[![F-Droid](https://img.shields.io/f-droid/v/com.unciv.app?logo=f-droid)](https://f-droid.org/en/packages/com.unciv.app/)
-[![itch.io](https://img.shields.io/static/v1?label=itch.io&message=Unciv&color=607D8B&logo=itch.io)](https://yairm210.itch.io/unciv)
-[![Flathub](https://img.shields.io/flathub/v/io.github.yairm210.unciv?logo=flathub)](https://flathub.org/apps/details/io.github.yairm210.unciv)
-[![AUR](https://img.shields.io/aur/version/unciv-bin?logo=arch-linux)](https://aur.archlinux.org/packages/unciv-bin)
-[![pi-apps](https://img.shields.io/badge/dynamic/json?color=c51a4a&label=Pi-Apps&logo=raspberry-pi&query=%24.Unciv.Version&url=https%3A%2F%2Fraw.githubusercontent.com%2FBotspot%2Fpi-apps-analytics%2Fmain%2Fpackage_data_v2.json)](https://github.com/Botspot/pi-apps)
-![Brew](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fformulae.brew.sh%2Fapi%2Fformula%2Funciv.json&query=%24.versions.stable&logo=homebrew&label=Brew)
-[![Chocolatey](https://img.shields.io/chocolatey/v/unciv?logo=chocolatey)](https://community.chocolatey.org/packages/unciv)
-[![scoop-games](https://img.shields.io/scoop/v/unciv?bucket=games)](https://github.com/Calinou/scoop-games)
- 
-[![Build status](https://github.com/yairm210/Unciv/actions/workflows/buildAndTest.yml/badge.svg)](https://github.com/yairm210/Unciv/actions/workflows/buildAndTest.yml)
-[![Discord](https://img.shields.io/discord/586194543280390151?color=%237289DA&logo=discord&logoColor=%23FFFFFF)](https://discord.gg/bjrB4Xw)
+OpenCiv Online is a fork of [Unciv](https://github.com/yairm210/Unciv) with one goal: play it in a
+web browser, no install, solo or with friends.
 
+Unciv is the open source, moddable remake of Civilization V for Android and desktop, built with
+[LibGDX](https://github.com/libgdx/libgdx) by Yair Morgenstern and a lot of contributors. Pretty much
+everything you'll find here — the game, the rules, the art, the translations — is their work.
+This fork only adds what it takes to run the game on the web. If you just want to play Unciv on your
+phone or computer, get the official version from the [Unciv repository](https://github.com/yairm210/Unciv).
 
-## What is this?
+## Where things stand
 
-An open source, moddability-focused Android and Desktop remake of Civ V, made with [LibGDX](https://github.com/libgdx/libgdx).
+The fork is young, and nothing is hosted publicly yet.
 
-## Is this any good?
+- **Streaming demo (works today).** The regular desktop build runs in a Docker container and its
+  screen is streamed to the browser with noVNC. It's a stopgap: playable, but each player needs their
+  own container on the server, and there's some input lag.
+- **Real web build (in progress).** A new `web` module based on
+  [gdx-teavm](https://github.com/xpenatan/gdx-teavm), which compiles the JVM bytecode (Kotlin included)
+  to JavaScript or WebAssembly. The game then runs entirely in the browser, as a static site.
 
-Depends what you're looking for. If you're in the market for high-res graphics, amazing soundtracks, animations etc, I highly recommend Firaxis's Civ-V-like game, "Civilization V".
+The detailed plan, with the technical hurdles and the options we ruled out, is
+[here](https://claude.ai/artifact/8RFZVnVUiDh4b2bz8HHvWm).
 
-If you want a small, fast, moddable, FOSS, in-depth 4X that can still run on a potato, you've come to the right place :)
+## Roadmap
 
-## How do I install?
+We move one small version at a time, each with a clear "done" criterion.
 
-- **Android** - [Google Play](https://play.google.com/store/apps/details?id=com.unciv.app) or [F-droid](https://f-droid.org/en/packages/com.unciv.app/)
-- **Linux** - [itch.io](https://yairm210.itch.io/unciv), Flatpak via [Flathub](https://flathub.org/apps/details/io.github.yairm210.unciv), or [AUR](https://aur.archlinux.org/packages/unciv-bin)
-- **Windows** - [Grab the MSI](https://github.com/yairm210/Unciv/releases/latest/download/Unciv.msi), or get from [itch.io](https://yairm210.itch.io/unciv), [Chocolatey](https://community.chocolatey.org/packages/unciv), or [Scoop](https://github.com/Calinou/scoop-games)
-- **Raspberry Pi** - [Pi-apps](https://github.com/Botspot/pi-apps)
-- **MacOS** - Via [Brew](https://brew.sh/) (`brew update && brew install unciv`) or install [with this guide](https://yairm210.github.io/Unciv/Other/Installing-on-macOS/) 
-- Jars, APKs and Windows/Linux builds also available in [Releases](https://github.com/yairm210/Unciv/releases) (run jar with `java -jar Unciv.jar`) - *not recommended* since we update frequently and you will quickly become out-of-date
-- [Build from scratch](https://yairm210.github.io/Unciv/Developers/Building-Locally/#without-android-studio) if that's your thing
+| Version | What it brings | Done when |
+|---|---|---|
+| 0 | Streaming demo behind HTTPS | A game is playable from a URL |
+| 1 | TeaVM proof of concept: `web` module, all of `core` compiles | The main menu shows up in Chrome and Firefox |
+| 2 | Platform layers: single-threaded dispatcher, JSON reflection, canvas font, IndexedDB saves, networking through `Gdx.net` | A new solo game lasts 50 turns, and saves survive a page reload |
+| 3 | Multiplayer: CORS and HTTPS on the Unciv server, chat over WebSocket, mod download proxy | A game between a browser and a desktop player |
+| 4 | Polish and release: asset caching, loading screen, touch input, save import/export, deploy to Pages, try the Wasm target | First load under 15 s on 4G, automatic deploys |
 
-## What's the roadmap?
+One rule throughout: every change to `core` goes behind an interface with the JVM version left
+untouched, so desktop and Android keep building, the existing tests stay green, and merging from
+upstream Unciv stays manageable.
 
-In this order:
+## Running it
 
-* Polish!
-    * UI+UX improvements ([suggestions welcome!](https://github.com/yairm210/Unciv/issues/new?assignees=&labels=feature&template=feature_request.md&title=Feature+request%3A+))
-    * Better automation, AI etc. in-game
-* G&K mechanics - see [#4697](https://www.github.com/yairm210/Unciv/issues/4697)
-* BNW mechanics - trade routes, world congress, etc.
+You'll need JDK 11 or newer (17 recommended).
 
-At the moment, no one is explicitly working to add these mechanics in - you could be the one! :D
+**On your desktop**, same as upstream:
+
+```bash
+./gradlew desktop:run
+```
+
+**In a browser, streamed from Docker** (the version 0 demo, on your own machine):
+
+```bash
+docker build -t openciv-online .
+docker run -d --name openciv -p 6901:6901 openciv-online
+```
+
+Then open http://localhost:6901/vnc.html?password=headless. The first build takes a while, Gradle
+builds the game inside the image. More details (keeping saves, troubleshooting, native VNC client) in
+[Building locally](docs/Developers/Building-Locally.md#running-via-docker).
+
+**The web build** doesn't run yet. Instructions will land here with version 1.
 
 ## Contributing
 
-Programmers start [here](https://yairm210.github.io/Unciv/Developers/Building-Locally/)!
+Issues and pull requests about the web version are welcome on this repo. For anything about the game
+itself (rules, AI, UI, translations, mods), it's better to go upstream, where the people who know that
+code are: start with the [Unciv docs](https://yairm210.github.io/Unciv/) and its
+[Discord](https://discord.gg/bjrB4Xw). Fixes that make sense for everyone will be offered back to
+Unciv.
 
-Translators start [here](https://yairm210.github.io/Unciv/Translating/Translating/)! Language completion status [here](https://github.com/yairm210/Unciv/blob/master/android/assets/jsons/translations/completionPercentages.properties) 
+## License and credits
 
-Modders start [here](https://yairm210.github.io/Unciv/Modders/Mods/)!
+This fork keeps Unciv's licensing as is.
 
-You can join us in any of the open issues, or work on improving anything you want - once you're finished, issue a pull request and it'll go into the next version!
-
-If not, you can help by spreading the word - vote for Unciv where you can, mention it on Reddit or Twitter etc, and help us with new ideas of how to get the word out!
-
-
-## FAQ
-
-### How about iOS?
-
-I'm not planning on it. It means paying money to Apple, yet another release path, and since I don't have an iOS device it means I can't test it properly.
-
-### Steam release?
-
-Steam has decided that they don't want to host Unciv, they probably don't want to risk legal issues with Firaxis (although those should be non-existent, see below).
- 
-### Will you implement {feature}?
-
-If it's in the original Civ V, then yes!
-
-If not, then the feature won't be added to the base game - possibly it will be added as a way to mod the game, which is constantly expanding.
-
-#### Why not? This is its own game, why not add features that weren't in Civ V?
-
-Having a clear vision is important for actually getting things done.
-
-Anyone can make a suggestion. Not all are good, viable, or simple. Not many can actually implement stuff.
-
-As an open source project, this stuff is done in our spare time, of which there isn't much.
-
-We need a clear-cut criteria to decide what to work on and what not to work on.
-
-#### Will you implement Civ VI?
-
-Considering how long it took to get this far, no.
-
-### How can I learn to play? Where's the wiki?
-
-All the tutorial information is available in-game at menu > civilopedia > tutorials
-
-All the information is included in the amazing [Civ V wiki](https://civilization.fandom.com/wiki/)
-
-Since this is a Civ V clone, you can search Google for how to play Civ V and there are loads of answers =)
-
-Alternatively, you could [join us on Discord](https://discord.gg/bjrB4Xw) and ask there =D
-
-### Aren't you basically making a Civ V clone? Is that even legal?
-
-According to the [US Copyright Office FL-108](https://upload.wikimedia.org/wikipedia/commons/9/96/U.S._Copyright_Office_fl108.pdf), intellectual property rights *do not* apply to mechanics - as I'm sure you know, there are a billion Flappy Bird knockoffs.
-
-It is definitely illegal:
- - To use any assets from the original game (images, sound etc) - they belong to Firaxis
-
-It is probably illegal (no solid sources on this):
- - To use the Civilization name
- - To impersonate the Civ games (so calling yourself civi|zation with a similar logo, for instance)
-
-Interestingly, [Civilization is a registered trademark](https://tsdr.uspto.gov/#caseNumber=74166752&caseType=SERIAL_NO&searchType=statusSearch), but it looks like it's only *that particular logo* which is trademarked, so technically you could make another game called "Civilization" and it'll stick. In any case we're not going there :) 
-
-## Run with Docker [![Docker](https://github.com/yairm210/Unciv/actions/workflows/dockerPublish.yml/badge.svg)](https://github.com/yairm210/Unciv/actions/workflows/dockerPublish.yml)
-
-`docker run -d -p 6901:6901 -p 5901:5901 ghcr.io/yairm210/unciv`
-Then go to http://localhost:6901/vnc.html?password=headless
-
-For more details, e.g. installing Docker, keeping saves between runs and over image updates, building the image yourself,
-troubleshooting connection issues, or using a native VNC client instead of a browser, see [Building-Locally](https://yairm210.github.io/Unciv/Developers/Building-Locally/#running-via-docker).
-
-## Licensing and credits
-
-Unciv's source code is available under the Mozilla Public License 2.0
-(see [LICENSE](LICENSE)), except where otherwise noted.
+The source code is under the Mozilla Public License 2.0 (see [LICENSE](LICENSE)), except where
+otherwise noted. In practice, if you host a build of this game, its source code (with your changes)
+has to stay available under the same license, and the original notices have to stay in place.
 TextureArraySpriteBatch.java, forked from
 [carlislefox/libgdx-texture-array-batch](https://github.com/carlislefox/libgdx-texture-array-batch),
-is available under CC0 1.0 Universal
-(see [LICENSE-TextureArraySpriteBatch](LICENSE-TextureArraySpriteBatch)).
+is under CC0 1.0 Universal (see [LICENSE-TextureArraySpriteBatch](LICENSE-TextureArraySpriteBatch)).
 
-The media files are authored by many people and are available under a mix of
-CC BY-SA 4.0, CC BY 3.0/4.0, CC0, and public domain terms
-(see [docs/Credits.md](docs/Credits.md)).
+The media files are made by many people and come under a mix of CC BY-SA 4.0, CC BY 3.0/4.0, CC0 and
+public domain terms (see [docs/Credits.md](docs/Credits.md)).
+
+Civilization is a trademark of its owners. This project isn't affiliated with Firaxis or 2K and uses
+none of their assets.
+
+Thanks to Yair Morgenstern and everyone who built Unciv. Without them there would be nothing to put
+online.
