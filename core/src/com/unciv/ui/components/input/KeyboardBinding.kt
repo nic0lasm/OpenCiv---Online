@@ -6,7 +6,11 @@ import com.unciv.models.stats.Stat
 
 
 private val unCamelCaseRegex = Regex("([A-Z])([A-Z])([a-z])|([a-z])([A-Z])")
-private fun unCamelCase(name: String) = unCamelCaseRegex.replace(name, """$1$4 $2$3$5""")
+// Same as replacing with "$1$4 $2$3$5", spelled out because TeaVM's regex (web build) rejects references to groups that didn't match
+private fun unCamelCase(name: String) = unCamelCaseRegex.replace(name) {
+    val g = it.groupValues
+    "${g[1]}${g[4]} ${g[2]}${g[3]}${g[5]}"
+}
 
 /**
  *  This is the database of supported "bindable" keyboard shortcuts.
