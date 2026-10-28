@@ -7,7 +7,7 @@ web browser, no install, solo or with friends.
 
 Unciv is the open source, moddable remake of Civilization V for Android and desktop, built with
 [LibGDX](https://github.com/libgdx/libgdx) by Yair Morgenstern and a lot of contributors. Pretty much
-everything you'll find here — the game, the rules, the art, the translations — is their work.
+everything you'll find here is their work: the game, the rules, the art, the translations.
 This fork only adds what it takes to run the game on the web. If you just want to play Unciv on your
 phone or computer, get the official version from the [Unciv repository](https://github.com/yairm210/Unciv).
 
@@ -43,7 +43,7 @@ upstream Unciv stays manageable.
 
 ## Running it
 
-You'll need JDK 11 or newer (17 recommended).
+You'll need JDK 11 or newer.
 
 **On your desktop**, same as upstream:
 
