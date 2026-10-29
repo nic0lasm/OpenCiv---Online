@@ -1,0 +1,79 @@
+# Builds the browser version (web module) and publishes it on this repository's GitHub Pages,
+# https://<owner>.github.io/<repo>/. Pages must use "GitHub Actions" as its source.
+name: Deploy web build
+
+on:
+  push:
+    branches:
+      - master
+  # Pull requests touching the web build only build it, to catch a broken build before it reaches master
+  pull_request:
+    paths:
+      - 'web/**'
+      - '.github/workflows/deployWeb.yml'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; a newer push waits instead of cancelling one halfway through
+concurrency:
+  group: pages-web
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Forks can enable it by removing this line once their Pages are set up
+    if: github.repository == 'nic0lasm/OpenCiv---Online'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Without ANDROID_HOME, settings.gradle.kts leaves the android module out, which the web build doesn't need.
+      # TeaVM runs in its own process with 8 GB (web/build.gradle.kts), the runner has 16.
+      - name: Build the web version
+        run: env -u ANDROID_HOME ./gradlew web:dist
+
+      # Pages lets browsers cache files for 10 minutes. A version on app.js makes a new deployment load the new code
+      # right away instead of mixing it with an old index.html.
+      - name: Prepare the site
+        run: |
+          site=web/build/dist/js/webapp
+          rm -rf "$site/WEB-INF"
+          sed -i "s|src=\"app.js\"|src=\"app.js?v=${GITHUB_SHA::12}\"|" "$site/index.html"
+          grep -q "app.js?v=" "$site/index.html"
+          du -sh "$site" "$site/app.js"
+
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+
+      - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          path: web/build/dist/js/webapp
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
