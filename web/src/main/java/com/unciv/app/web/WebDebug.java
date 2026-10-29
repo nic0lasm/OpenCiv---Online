@@ -72,6 +72,6 @@ final class WebDebug {
         }
     }
 
-    @JSBody(params = { "name", "f" }, script = "window[name] = function() { var s = f(); console.log(s); return s; };")
+    @JSBody(params = { "name", "f" }, script = "window[name] = function() { var dumpText = f(); console.log(dumpText); return dumpText; };")
     private static native void export(String name, StringSupplier f);
 }

@@ -8,7 +8,8 @@ import java.io.OutputStream;
 import org.teavm.jso.JSBody;
 
 /**
- * Wraps gdx-teavm's [WebFiles] so local files (settings, saves) know when they were last written.
+ * Wraps gdx-teavm's [WebFiles] so local files (settings, saves) know when they were last written,
+ * and internal files that aren't preloaded are fetched when asked for (see [WebAssets]).
  *
  * gdx-teavm keeps local files in IndexedDB but its [WebFileHandle.lastModified] always returns 0.
  * Unciv sorts saves by that date, and purges old autosaves by it, so with 0 everywhere it would
@@ -26,6 +27,7 @@ public class WebLocalFiles implements Files {
     @Override
     public FileHandle getFileHandle(String path, FileType type) {
         if (type == FileType.Local) return local(path);
+        if (type == FileType.Internal) return internal(path);
         return files.getFileHandle(path, type);
     }
 
@@ -36,7 +38,9 @@ public class WebLocalFiles implements Files {
 
     @Override
     public FileHandle internal(String path) {
-        return files.internal(path);
+        FileHandle handle = files.internal(path);
+        WebAssets.ensureLoaded(files, path, handle);
+        return handle;
     }
 
     @Override
@@ -132,12 +136,12 @@ public class WebLocalFiles implements Files {
         }
     }
 
-    @JSBody(params = "key", script = "try { return window.localStorage.getItem(key); } catch (e) { return null; }")
+    @JSBody(params = "key", script = "try { return window.localStorage.getItem(key); } catch (storageError) { return null; }")
     private static native String getItem(String key);
 
-    @JSBody(params = { "key", "value" }, script = "try { window.localStorage.setItem(key, value); } catch (e) {}")
+    @JSBody(params = { "key", "value" }, script = "try { window.localStorage.setItem(key, value); } catch (storageError) {}")
     private static native void setItem(String key, String value);
 
-    @JSBody(params = "key", script = "try { window.localStorage.removeItem(key); } catch (e) {}")
+    @JSBody(params = "key", script = "try { window.localStorage.removeItem(key); } catch (storageError) {}")
     private static native void removeItem(String key);
 }

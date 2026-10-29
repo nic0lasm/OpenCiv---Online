@@ -72,32 +72,32 @@ public class WebFont implements FontImplementation {
     }
 
     @JSBody(params = { "font", "size" }, script = ""
-        + "var ctx = document.createElement('canvas').getContext('2d');"
-        + "ctx.font = font;"
-        + "var m = ctx.measureText('Hg');"
-        + "var a = m.fontBoundingBoxAscent, d = m.fontBoundingBoxDescent;"
-        + "if (a === undefined) { a = size * 0.8; d = size * 0.2; }"
-        + "return [a, d];")
+        + "var measureContext = document.createElement('canvas').getContext('2d');"
+        + "measureContext.font = font;"
+        + "var metrics = measureContext.measureText('Hg');"
+        + "var fontAscent = metrics.fontBoundingBoxAscent, fontDescent = metrics.fontBoundingBoxDescent;"
+        + "if (fontAscent === undefined) { fontAscent = size * 0.8; fontDescent = size * 0.2; }"
+        + "return [fontAscent, fontDescent];")
     private static native float[] measureFont(String font, int size);
 
     @JSBody(params = { "font", "text" }, script = ""
-        + "var ctx = document.createElement('canvas').getContext('2d');"
-        + "ctx.font = font;"
-        + "return ctx.measureText(text).width;")
+        + "var measureContext = document.createElement('canvas').getContext('2d');"
+        + "measureContext.font = font;"
+        + "return measureContext.measureText(text).width;")
     private static native double measureWidth(String font, String text);
 
     /** @return the glyph as ARGB ints, the layout [Fonts.pixmapFromArgb] expects */
     @JSBody(params = { "font", "text", "w", "h", "ascent" }, script = ""
-        + "var c = document.createElement('canvas'); c.width = w; c.height = h;"
-        + "var ctx = c.getContext('2d');"
-        + "ctx.font = font; ctx.fillStyle = '#fff'; ctx.textBaseline = 'alphabetic';"
-        + "ctx.fillText(text, 0, ascent);"
-        + "var d = ctx.getImageData(0, 0, w, h).data;"
-        + "var out = new Array(w * h);"
-        + "for (var i = 0; i < out.length; i++) {"
-        + "  var p = i * 4;"
-        + "  out[i] = ((d[p + 3] << 24) | (d[p] << 16) | (d[p + 1] << 8) | d[p + 2]);"
+        + "var glyphCanvas = document.createElement('canvas'); glyphCanvas.width = w; glyphCanvas.height = h;"
+        + "var glyphContext = glyphCanvas.getContext('2d');"
+        + "glyphContext.font = font; glyphContext.fillStyle = '#fff'; glyphContext.textBaseline = 'alphabetic';"
+        + "glyphContext.fillText(text, 0, ascent);"
+        + "var rgba = glyphContext.getImageData(0, 0, w, h).data;"
+        + "var argb = new Array(w * h);"
+        + "for (var pixel = 0; pixel < argb.length; pixel++) {"
+        + "  var offset = pixel * 4;"
+        + "  argb[pixel] = ((rgba[offset + 3] << 24) | (rgba[offset] << 16) | (rgba[offset + 1] << 8) | rgba[offset + 2]);"
         + "}"
-        + "return out;")
+        + "return argb;")
     private static native int[] drawGlyph(String font, String text, int w, int h, float ascent);
 }
