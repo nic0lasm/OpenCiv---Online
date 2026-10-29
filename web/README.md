@@ -11,6 +11,12 @@ that allows the page's origin (see [Multiplayer](#multiplayer)).
 
 ![A saved game loaded back after reloading the page](screenshot-loaded-game.png)
 
+## Online version
+
+Every push to master builds this module and publishes it on GitHub Pages:
+**https://nic0lasm.github.io/OpenCiv---Online/** (workflow `.github/workflows/deployWeb.yml`; the repository's
+Pages settings must use "GitHub Actions" as source). Pull requests that touch `web/` only build it.
+
 ## Building and running
 
 ```
