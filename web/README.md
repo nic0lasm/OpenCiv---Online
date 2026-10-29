@@ -53,6 +53,12 @@ Core is unchanged in behaviour. The JVM-only parts are kept out of the browser b
 - **Reflection**: gdx-teavm's list (`reflection(...)` in `build.gradle.kts`) covers `com.unciv.models.**`.
   The game state, `com.unciv.logic`, goes through `SaveReflectionSupplier` instead, which only exposes fields
   and constructors: gdx-teavm's list exposes every method, and for `com.unciv.logic.**` that ran TeaVM out of memory.
+  It also covers the few Json data classes living under `com.unciv.ui`, like `FormattedLine` (the civilopedia text
+  of every ruleset object, tutorial tasks included).
+- **Pixmaps**: gdx-teavm keeps a pixmap's pixels in the wasm heap and in a `ByteBuffer` copy, and only ever copies
+  heap to buffer. Unciv writes glyphs and ruleset icons straight into `getPixels()`, so the patched
+  `Gdx2DPixmapNative` copies the buffer back to the heap before native operations once it has been handed out.
+  Without that, the first glyph of each new font atlas page was invisible.
 - **Local files**: gdx-teavm keeps them in IndexedDB but reports 0 as modification date. `WebLocalFiles` wraps
   `Gdx.files` and keeps the dates in `localStorage`, so the save list is sorted and old autosaves are purged
   as on desktop.
@@ -86,8 +92,6 @@ plain path where `FileHandle.file()` isn't available.
 - **runBlocking** can't wait for timers, network or GL-thread work; it throws instead of freezing the tab.
 - **Reflection** covers `com.unciv.models.**` and the game state. Code elsewhere that reflects on its own
   classes will fail with `NoSuchFieldException` and needs adding.
-- **Display glitches** seen in the world screen: a dark rectangle under the top bar, and the first letter of
-  some popup texts missing.
 - **Fonts**: mod fonts (`FontFamilyData.filePath`) aren't loaded, the options only offer CSS generic families.
 - **Collator**: no locale-aware sorting.
 - **Audio**: untested, no music found at startup (as on a fresh desktop install).
@@ -99,5 +103,9 @@ plain path where `FileHandle.file()` isn't available.
 
 Crashes show the JavaScript stack on the crash screen and in the console. TeaVM names are mangled but readable:
 `culf_UncivFiles_getSave` is `com.unciv.logic.files.UncivFiles.getSave`.
+
+Two helpers are available from the developer console (`WebDebug`):
+`uncivDumpStage()` lists the actors of the current screen with their position, size, visibility and label text,
+and `uncivFontInfo()` shows how many font atlas pages exist and which characters are on the last one.
 In a hidden tab or headless Chrome, `requestAnimationFrame` gets throttled to about one frame per second, and
 gdx-teavm waits 60 frames before the first render, so the page stays black for a while there.

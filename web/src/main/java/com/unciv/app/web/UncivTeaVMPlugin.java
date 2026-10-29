@@ -8,6 +8,8 @@ import org.teavm.model.ClassHolder;
 import org.teavm.model.ClassHolderTransformer;
 import org.teavm.model.ClassHolderTransformerContext;
 import org.teavm.model.ClassReader;
+import org.teavm.model.ElementModifier;
+import org.teavm.model.FieldReader;
 import org.teavm.model.MethodHolder;
 import org.teavm.model.MethodReader;
 import org.teavm.model.MethodReference;
@@ -42,6 +44,8 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         "java.io.File",
         "java.nio.charset.Charset",
         "com.badlogic.gdx.graphics.Pixmap",
+        "com.badlogic.gdx.graphics.g2d.Gdx2DPixmap",
+        "com.badlogic.gdx.graphics.g2d.Gdx2DPixmapNative",
         "com.badlogic.gdx.utils.reflect.Field",
         "kotlin.ExceptionsKt__ExceptionsKt"
     );
@@ -52,7 +56,10 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         // Modifiers and generic element types, see the patch class
         "com.badlogic.gdx.utils.reflect.Field",
         // setSeed throws in TeaVM, which breaks the class' own static init
-        "java.util.concurrent.ThreadLocalRandom"
+        "java.util.concurrent.ThreadLocalRandom",
+        // Keep the wasm heap in step with the pixel buffer, see the patch classes
+        "com.badlogic.gdx.graphics.g2d.Gdx2DPixmap",
+        "com.badlogic.gdx.graphics.g2d.Gdx2DPixmapNative"
     );
 
     @Override
@@ -92,14 +99,21 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
 
             ClassRefsRenamer renamer = new ClassRefsRenamer(referenceCache,
                 name -> name.startsWith(PATCH_PREFIX) ? name.substring(PATCH_PREFIX.length()) : name);
+            // Fields the class doesn't have yet are added, the others are only there so the patch compiles
+            for (FieldReader field : patch.getFields()) {
+                if (cls.getField(field.getName()) == null) cls.addField(renamer.rename(ModelUtils.copyField(field)));
+            }
             for (MethodReader method : patch.getMethods()) {
                 // The patch class' own default constructor and static init are not part of the patch
                 if (method.getName().equals("<clinit>")) continue;
                 if (method.getName().equals("<init>") && method.parameterCount() == 0) continue;
+                // Native methods declare the class' existing ones, so the patch can call them
+                if (method.hasModifier(ElementModifier.NATIVE)) continue;
                 MethodHolder copy = renamer.rename(ModelUtils.copyMethod(method));
                 MethodHolder existing = cls.getMethod(copy.getDescriptor());
                 if (existing != null) {
-                    if (!replacingClasses.contains(cls.getName())) continue;
+                    // Constructors are only ever added, even in replacing classes
+                    if (!replacingClasses.contains(cls.getName()) || method.getName().equals("<init>")) continue;
                     cls.removeMethod(existing);
                 }
                 cls.addMethod(copy);
