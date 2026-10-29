@@ -41,12 +41,15 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         "java.io.File",
         "java.nio.charset.Charset",
         "com.badlogic.gdx.graphics.Pixmap",
+        "com.badlogic.gdx.utils.reflect.Field",
         "kotlin.ExceptionsKt__ExceptionsKt"
     );
 
     private static final Set<String> replacingClasses = Set.of(
         // stackTraceToString: give the JavaScript stack, the Java one is empty
-        "kotlin.ExceptionsKt__ExceptionsKt"
+        "kotlin.ExceptionsKt__ExceptionsKt",
+        // Modifiers and generic element types, see the patch class
+        "com.badlogic.gdx.utils.reflect.Field"
     );
 
     @Override

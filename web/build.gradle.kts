@@ -35,9 +35,12 @@ gdxTeaVM {
 
     // libGDX Json fills game objects (rulesets, settings, saves) through reflection,
     // so TeaVM must keep the metadata for those classes.
-    // Asking for com.unciv.** at once ran TeaVM out of memory, so it's kept to what the main menu needs.
+    // Asking for com.unciv.** at once ran TeaVM out of memory, so it's kept to the rulesets and settings.
+    // The game state (com.unciv.logic) gets fields and constructors only, from SaveReflectionSupplier.
     reflection(
         "com.unciv.models.**",
+        // Fonts.extractPixmapFromTextureRegion reads its private pixmap field
+        "com.badlogic.gdx.graphics.glutils.FileTextureData",
         "com.unciv.ui.screens.pickerscreens.PromotionScreenColors",
     )
     reflectionDebug.set(false)
