@@ -4,8 +4,10 @@ This module compiles Unciv to JavaScript with [TeaVM](https://teavm.org), using
 [gdx-teavm](https://github.com/xpenatan/gdx-teavm) 1.6.2 as the libGDX backend (WebGL, input, audio, asset preloading).
 It is not the noVNC streaming setup in `web-stream/`: here the game itself runs in the page.
 
-Status: **phase 2.** In Chrome you can start a single-player game, play turns, save it, reload the page
-and load it back. Settings and saves stay in the browser's storage (IndexedDB).
+Status: **phase 3.** In Chrome you can start a single-player game, play turns, save it, reload the page
+and load it back. Settings and saves stay in the browser's storage (IndexedDB). The page can reach the network:
+the mod list comes from GitHub, and an online multiplayer game can be created and played against an UncivServer
+that allows the page's origin (see [Multiplayer](#multiplayer)).
 
 ![A saved game loaded back after reloading the page](screenshot-loaded-game.png)
 
@@ -32,7 +34,11 @@ Core is unchanged in behaviour. The JVM-only parts are kept out of the browser b
     `WebDispatcher` (a queue drained from `setTimeout`, a few ms at a time). `runBlocking` drains that queue until
     its block is done.
   - `com.unciv.utils.ThreadPools` and `com.unciv.logic.HttpEngine`, two small seams added to core for this:
-    Concurrency's thread pools and the ktor engine (CIO on the JVM).
+    Concurrency's thread pools and the ktor engine (CIO on the JVM). In the browser, `WebHttpEngine` sends
+    ktor's requests through `fetch()`.
+  - `com.unciv.logic.multiplayer.storage.SimpleHttp`: the multiplayer file storage expects the server's answer
+    before the call returns, so the web version uses a synchronous `XMLHttpRequest`. The page waits for the
+    server, as the JVM thread did, and Chrome logs a deprecation warning about it.
   - `kotlinx.coroutines.internal.StackTraceRecoveryKt`, `org.slf4j.LoggerFactory`: both need real JVM stack
     frames or class loaders.
   - JDK classes TeaVM doesn't have: `AtomicReferenceArray`, `ReentrantReadWriteLock`, `LockSupport`,
@@ -79,11 +85,16 @@ plain path where `FileHandle.file()` isn't available.
 - Starting a new single-player game, playing turns (a few dozen ms per turn on a small map at the start)
 - Autosaves, manual saves, the Load game screen and Resume, also after reloading the page
 - Settings kept across reloads
+- Network through `fetch()`: GitHub mod list, server checks, multiplayer game files
+- Creating an online multiplayer game, playing turns and getting updates from an UncivServer with CORS enabled
 
 ## What doesn't (yet), roughly in the order to tackle it
 
-- **Network**: `WebHttpEngine` refuses every request, so multiplayer, mod downloads and update checks fail
-  ("Couldn't connect to server" in the log). Next step: a ktor engine on top of `fetch()`.
+- **Multiplayer servers** must allow the page's origin (CORS). The default server, uncivserver.xyz, doesn't yet,
+  so from the browser it shows as unreachable.
+- **Chat** goes through a WebSocket, which `WebHttpEngine` doesn't provide; the chat keeps trying to reconnect
+  and logs errors. Same for anything else using ktor's WebSockets.
+- **Mod downloads**: the list shows, downloading a mod isn't tried yet (zip files written to local storage).
 - **Save files**: saves can't leave the browser yet. "Save to / Load from custom location" have no backend
   (`PlatformSaverLoader.None`), only the clipboard works. Clearing site data deletes the saves.
   No `FileType.External`, no `FileHandle.file()`: code outside the save path that calls it still throws.
@@ -98,6 +109,18 @@ plain path where `FileHandle.file()` isn't available.
 - WebGL warns `glTexParameterf: Texture filter not recognized` (the atlases ask for a mipmap mag filter);
   harmless so far.
 - Size and speed: no TeaVM optimization, no asset trimming, everything preloaded.
+
+## Multiplayer
+
+UncivServer refuses requests from web pages unless told which pages may call it:
+
+```
+java -jar UncivServer.jar -cors https://example.org
+```
+
+`-cors` (or the `UncivServerCorsOrigins` environment variable) takes a comma-separated list of origins, or `*`.
+Without it nothing changes, and desktop or Android clients never need it since they don't send an `Origin` header.
+Then set the server address in Options > Multiplayer in the browser.
 
 ## Debugging
 
