@@ -52,6 +52,7 @@ Please note:
 * Run it: `java -jar UncivServer.jar -p 8080 -f /some/folder/`
     * It basically just does simple file storage over HTTP.
     * Files are not cleaned automatically if a game ends or is deleted on the client-side
+* For players using the browser version, allow the page's origin: `java -jar UncivServer.jar -cors https://example.org` (comma-separated list, or `*`). Off by default.
 
 ## Third-party (unofficial) software for hosting your own Unciv server
 

@@ -49,10 +49,12 @@ object EventBus {
         return getSuperClasses(eventClass) + eventClass
     }
 
+    /** Direct supertypes through Java reflection - superclass first, then interfaces in declaration order, like
+     *  KClass.supertypes - since that one needs kotlin-reflect, which the web build doesn't have. */
     private fun getSuperClasses(kClass: KClass<*>): List<KClass<*>> {
-        if (kClass.supertypes.size == 1 && kClass.supertypes[0] == Any::class) return emptyList()
-        return kClass.supertypes
-            .map { it.classifier as KClass<*> }
+        val javaClass = kClass.java
+        return (listOfNotNull(javaClass.superclass) + javaClass.interfaces)
+            .map { it.kotlin }
             .flatMap { getSuperClasses(it) + it }
             .filter { it != Any::class }
     }

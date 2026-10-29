@@ -19,8 +19,10 @@ public class UncivSubstitutionPolicy extends SimpleSubstitutionPolicy {
         // Needs real Java stack frames, which TeaVM doesn't have
         "kotlinx.coroutines.internal.StackTraceRecoveryKt",
         "com.unciv.utils.ThreadPools",
-        // ktor CIO engine (sockets, TLS) -> an engine without network access
+        // ktor CIO engine (sockets, TLS) -> an engine on top of fetch()
         "com.unciv.logic.HttpEngine",
+        // HttpURLConnection -> synchronous XMLHttpRequest
+        "com.unciv.logic.multiplayer.storage.SimpleHttp",
         // ktor logs through slf4j, whose provider lookup uses class loaders
         "org.slf4j.LoggerFactory",
         // JDK classes TeaVM doesn't have at all
