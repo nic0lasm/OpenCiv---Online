@@ -91,10 +91,12 @@ class UncivFiles(
         }
 
         toReturn.parent().mkdirs()
-        // Lambda + fallback: FileHandle.file() isn't available in the web build
-        debug("Save found: %s", { runCatching { toReturn.file().absolutePath }.getOrElse { toReturn.path() } })
+        debug("Save found: %s", { toReturn.pathForLog() })
         return toReturn
     }
+
+    /** Absolute path where there is one. FileHandle.file() isn't available in the web build, the plain path is used there. */
+    private fun FileHandle.pathForLog(): String = runCatching { file().absolutePath }.getOrElse { path() }
 
     /**
      * @throws GdxRuntimeException if the [path] represents a directory
@@ -134,8 +136,8 @@ class UncivFiles(
         }
 
         debug("Local files: %s, external files: %s",
-            { localFiles.joinToString(prefix = "[", postfix = "]", transform = { it.file().absolutePath }) },
-            { externalFiles.joinToString(prefix = "[", postfix = "]", transform = { it.file().absolutePath }) })
+            { localFiles.joinToString(prefix = "[", postfix = "]", transform = { it.pathForLog() }) },
+            { externalFiles.joinToString(prefix = "[", postfix = "]", transform = { it.pathForLog() }) })
         return localFiles + externalFiles
     }
 
