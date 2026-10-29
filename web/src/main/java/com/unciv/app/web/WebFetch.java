@@ -22,20 +22,20 @@ public final class WebFetch {
 
     /** Asynchronous request through fetch(), for the ktor engine. */
     @JSBody(params = { "method", "url", "headers", "body", "callback" }, script = ""
-        + "var h = new Headers();"
-        + "headers.split('\\n').forEach(function(line) {"
-        + "  var i = line.indexOf(':');"
-        + "  if (i > 0) try { h.append(line.substring(0, i).trim(), line.substring(i + 1).trim()); } catch (e) {}"
+        + "var requestHeaders = new Headers();"
+        + "headers.split('\\n').forEach(function(headerLine) {"
+        + "  var colon = headerLine.indexOf(':');"
+        + "  if (colon > 0) try { requestHeaders.append(headerLine.substring(0, colon).trim(), headerLine.substring(colon + 1).trim()); } catch (headerError) {}"
         + "});"
-        + "var init = { method: method, headers: h, redirect: 'follow' };"
-        + "if (body !== null && method !== 'GET' && method !== 'HEAD') init.body = body;"
+        + "var requestInit = { method: method, headers: requestHeaders, redirect: 'follow' };"
+        + "if (body !== null && method !== 'GET' && method !== 'HEAD') requestInit.body = body;"
         + "try {"
-        + "  fetch(url, init).then(function(r) {"
-        + "    var hs = '';"
-        + "    r.headers.forEach(function(v, k) { hs += k + ': ' + v + '\\n'; });"
-        + "    return r.arrayBuffer().then(function(b) { callback(r.status, r.statusText, hs, new Int8Array(b), null); });"
-        + "  }).catch(function(e) { callback(0, null, '', null, String(e)); });"
-        + "} catch (e) { callback(0, null, '', null, String(e)); }")
+        + "  fetch(url, requestInit).then(function(response) {"
+        + "    var responseHeaders = '';"
+        + "    response.headers.forEach(function(headerValue, headerName) { responseHeaders += headerName + ': ' + headerValue + '\\n'; });"
+        + "    return response.arrayBuffer().then(function(responseBody) { callback(response.status, response.statusText, responseHeaders, new Int8Array(responseBody), null); });"
+        + "  }).catch(function(fetchError) { callback(0, null, '', null, String(fetchError)); });"
+        + "} catch (fetchError) { callback(0, null, '', null, String(fetchError)); }")
     public static native void fetch(String method, String url, String headers, Int8Array body, Callback callback);
 
     /**
@@ -44,16 +44,16 @@ public final class WebFetch {
      * The body is read as text. Calls [callback] before returning.
      */
     @JSBody(params = { "method", "url", "headers", "body", "callback" }, script = ""
-        + "var x = new XMLHttpRequest();"
+        + "var request = new XMLHttpRequest();"
         + "try {"
-        + "  x.open(method, url, false);"
-        + "  headers.split('\\n').forEach(function(line) {"
-        + "    var i = line.indexOf(':');"
-        + "    if (i > 0) try { x.setRequestHeader(line.substring(0, i).trim(), line.substring(i + 1).trim()); } catch (e) {}"
+        + "  request.open(method, url, false);"
+        + "  headers.split('\\n').forEach(function(headerLine) {"
+        + "    var colon = headerLine.indexOf(':');"
+        + "    if (colon > 0) try { request.setRequestHeader(headerLine.substring(0, colon).trim(), headerLine.substring(colon + 1).trim()); } catch (headerError) {}"
         + "  });"
-        + "  x.send(body === null || method === 'GET' ? null : body);"
-        + "} catch (e) { callback(0, null, '', null, String(e)); return; }"
-        + "var bytes = new TextEncoder().encode(x.responseText || '');"
-        + "callback(x.status, x.statusText, x.getAllResponseHeaders(), new Int8Array(bytes.buffer), x.status === 0 ? 'Network error' : null);")
+        + "  request.send(body === null || method === 'GET' ? null : body);"
+        + "} catch (requestError) { callback(0, null, '', null, String(requestError)); return; }"
+        + "var responseBytes = new TextEncoder().encode(request.responseText || '');"
+        + "callback(request.status, request.statusText, request.getAllResponseHeaders(), new Int8Array(responseBytes.buffer), request.status === 0 ? 'Network error' : null);")
     public static native void requestSync(String method, String url, String headers, String body, Callback callback);
 }
