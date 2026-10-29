@@ -47,6 +47,7 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         "com.badlogic.gdx.graphics.g2d.Gdx2DPixmap",
         "com.badlogic.gdx.graphics.g2d.Gdx2DPixmapNative",
         "com.badlogic.gdx.utils.reflect.Field",
+        "com.github.xpenatan.gdx.teavm.backends.web.assetloader.AssetLoadImpl",
         "kotlin.ExceptionsKt__ExceptionsKt"
     );
 
@@ -59,7 +60,9 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         "java.util.concurrent.ThreadLocalRandom",
         // Keep the wasm heap in step with the pixel buffer, see the patch classes
         "com.badlogic.gdx.graphics.g2d.Gdx2DPixmap",
-        "com.badlogic.gdx.graphics.g2d.Gdx2DPixmapNative"
+        "com.badlogic.gdx.graphics.g2d.Gdx2DPixmapNative",
+        // Leave the on-demand assets out of the preload list, see WebAssets
+        "com.github.xpenatan.gdx.teavm.backends.web.assetloader.AssetLoadImpl"
     );
 
     @Override
