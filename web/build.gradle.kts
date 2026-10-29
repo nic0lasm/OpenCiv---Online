@@ -30,6 +30,8 @@ kotlin {
     }
 }
 
+val webDebug = providers.gradleProperty("webDebug").map { it.toBoolean() }.getOrElse(false)
+
 gdxTeaVM {
     assets(rootProject.file("android/assets"))
 
@@ -48,8 +50,11 @@ gdxTeaVM {
     webDefaults {
         mainClass.set("com.unciv.app.web.WebLauncher")
         htmlTitle.set("Unciv")
+        // TeaVM's optimizer (BALANCED and AGGRESSIVE alike) crashes on the coroutine in WorldScreen.nextTurn,
+        // so the code isn't optimized, only minified. -PwebDebug=true keeps the full names, which crash stacks
+        // and the console show as is (com.unciv.logic.files.UncivFiles.getSave is culf_UncivFiles_getSave).
         optimization.set(OptimizationLevel.NONE)
-        obfuscated.set(false)
+        obfuscated.set(!webDebug)
         outOfProcess.set(true)
         processMemory.set(8192)
     }

@@ -21,8 +21,9 @@ that allows the page's origin (see [Multiplayer](#multiplayer)).
 Any static file server works for `web/build/dist/js/webapp`, e.g. `python3 -m http.server -d web/build/dist/js/webapp`.
 
 The build needs JDK 17+ (gdx-teavm and TeaVM's class library require it) and takes 2-4 minutes;
-TeaVM gets 8 GB (`processMemory`). The output is not optimized yet: `app.js` is about 80 MB
-(`optimization = NONE`, no obfuscation) and the assets about 35 MB, all preloaded before the game starts.
+TeaVM gets 8 GB (`processMemory`). `app.js` is minified, about 27 MB (under 5 MB gzipped). The assets the game
+needs at startup are preloaded, about 10 MB; translations are fetched when a language is picked (see `WebAssets`).
+TeaVM's optimizer is off: at BALANCED or AGGRESSIVE it crashes on the coroutine in `WorldScreen.nextTurn`.
 
 ## How it works
 
@@ -108,7 +109,8 @@ plain path where `FileHandle.file()` isn't available.
 - **Audio**: untested, no music found at startup (as on a fresh desktop install).
 - WebGL warns `glTexParameterf: Texture filter not recognized` (the atlases ask for a mipmap mag filter);
   harmless so far.
-- Size and speed: no TeaVM optimization, no asset trimming, everything preloaded.
+- Size: TeaVM's optimizer crashes on `WorldScreen.nextTurn` (see above), which would cut `app.js` further.
+  Atlases, sounds and extra images are still all preloaded.
 
 ## Multiplayer
 
@@ -126,6 +128,13 @@ Then set the server address in Options > Multiplayer in the browser.
 
 Crashes show the JavaScript stack on the crash screen and in the console. TeaVM names are mangled but readable:
 `culf_UncivFiles_getSave` is `com.unciv.logic.files.UncivFiles.getSave`.
+
+The default build is minified: names are short and stacks unreadable. `./gradlew web:dist -PwebDebug=true` builds
+with full names (larger, same speed to build).
+
+When writing `@JSBody` scripts, give local variables long names. In the minified build TeaVM renames the parameters
+to one or two letters without checking the script's own variables, so a local `c` silently replaces a parameter
+that became `c`.
 
 Two helpers are available from the developer console (`WebDebug`):
 `uncivDumpStage()` lists the actors of the current screen with their position, size, visibility and label text,
