@@ -15,6 +15,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -197,6 +198,13 @@ private class UncivServerRunner : CliktCommand() {
         help = "Display each operation archive request IP to assist management personnel"
     ).flag("-no-Identify", default = false)
 
+    private val corsOrigins by option(
+        "-cors", "-corsOrigins",
+        envvar = "UncivServerCorsOrigins",
+        help = "Comma-separated origins allowed to call the server from a web page, e.g. https://example.org " +
+            "for the browser version of Unciv, or * for any. Off by default"
+    ).default("")
+
     lateinit var isAliveInfo: IsAliveInfo
 
     override fun run() {
@@ -289,6 +297,22 @@ private class UncivServerRunner : CliktCommand() {
         if (authV1Enabled) loadAuthFile()
         val server = embeddedServer(Netty, port = serverPort) {
             install(ContentNegotiation) { json() }
+
+            val origins = corsOrigins.split(',').map { it.trim().removeSuffix("/") }.filter { it.isNotEmpty() }
+            if (origins.isNotEmpty()) {
+                echo("Allowing requests from web pages at: ${origins.joinToString()}")
+                install(CORS) {
+                    for (origin in origins) {
+                        if (origin == "*") anyHost()
+                        else allowHost(origin.substringAfter("://"), schemes = listOf(origin.substringBefore("://", "https")))
+                    }
+                    allowMethod(HttpMethod.Put)
+                    allowMethod(HttpMethod.Delete)
+                    allowHeader(HttpHeaders.Authorization)
+                    allowHeader(HttpHeaders.ContentType)
+                    allowNonSimpleContentTypes = true
+                }
+            }
 
             install(Authentication) {
                 basic {
