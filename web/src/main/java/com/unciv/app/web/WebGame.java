@@ -16,6 +16,7 @@ public class WebGame extends UncivGame {
         // Before UncivFiles is created from Gdx.files: local files need their modification dates
         if (Gdx.files instanceof WebFiles) Gdx.files = new WebLocalFiles((WebFiles) Gdx.files);
         super.create();
+        WebDebug.install();
     }
 
     // The JVM version asks java.lang.management, which TeaVM doesn't have
