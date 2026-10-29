@@ -286,6 +286,24 @@ private class UncivServerRunner : CliktCommand() {
     }
     // endregion Auth
 
+    /** Lets the web pages listed in [corsOrigins] call the server, nothing happens when it's empty */
+    private fun Application.installCors() {
+        val origins = corsOrigins.split(',').map { it.trim().removeSuffix("/") }.filter { it.isNotEmpty() }
+        if (origins.isEmpty()) return
+        echo("Allowing requests from web pages at: ${origins.joinToString()}")
+        install(CORS) {
+            for (origin in origins) {
+                if (origin == "*") anyHost()
+                else allowHost(origin.substringAfter("://"), schemes = listOf(origin.substringBefore("://", "https")))
+            }
+            allowMethod(HttpMethod.Put)
+            allowMethod(HttpMethod.Delete)
+            allowHeader(HttpHeaders.Authorization)
+            allowHeader(HttpHeaders.ContentType)
+            allowNonSimpleContentTypes = true
+        }
+    }
+
     private fun serverRun(serverPort: Int, fileFolderName: String) {
         val portStr: String = if (serverPort == 80) "" else ":$serverPort"
 
@@ -298,21 +316,7 @@ private class UncivServerRunner : CliktCommand() {
         val server = embeddedServer(Netty, port = serverPort) {
             install(ContentNegotiation) { json() }
 
-            val origins = corsOrigins.split(',').map { it.trim().removeSuffix("/") }.filter { it.isNotEmpty() }
-            if (origins.isNotEmpty()) {
-                echo("Allowing requests from web pages at: ${origins.joinToString()}")
-                install(CORS) {
-                    for (origin in origins) {
-                        if (origin == "*") anyHost()
-                        else allowHost(origin.substringAfter("://"), schemes = listOf(origin.substringBefore("://", "https")))
-                    }
-                    allowMethod(HttpMethod.Put)
-                    allowMethod(HttpMethod.Delete)
-                    allowHeader(HttpHeaders.Authorization)
-                    allowHeader(HttpHeaders.ContentType)
-                    allowNonSimpleContentTypes = true
-                }
-            }
+            installCors()
 
             install(Authentication) {
                 basic {

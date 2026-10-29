@@ -1,5 +1,6 @@
 package unciv.webemu.com.unciv.logic.multiplayer.storage
 
+import com.github.xpenatan.gdx.teavm.backends.web.dom.typedarray.TypedArrays
 import com.unciv.app.web.WebFetch
 import com.unciv.utils.debug
 
@@ -11,6 +12,7 @@ private typealias SendRequestCallback = (success: Boolean, result: String, code:
  * The multiplayer file storage expects the answer before the call returns, so this uses a synchronous
  * XMLHttpRequest: the page waits for the server, as the JVM thread did. Timeouts are the browser's,
  * which doesn't allow setting one on a synchronous request, and so is the User-Agent.
+ * getIpAddress is left out: nothing calls it, and a page can't find its LAN address anyway.
  */
 object SimpleHttp {
     fun sendGetRequest(url: String, timeout: Int = 5000, header: Map<String, String>? = null, action: SendRequestCallback) {
@@ -27,7 +29,7 @@ object SimpleHttp {
         var result = ""
         var code: Int? = null
         WebFetch.requestSync(method, fullUrl, headers.toString(), content.ifEmpty { null }) { status, _, _, body, error ->
-            val text = if (body == null) "" else String(com.github.xpenatan.gdx.teavm.backends.web.dom.typedarray.TypedArrays.toByteArray(body), Charsets.UTF_8)
+            val text = if (body == null) "" else String(TypedArrays.toByteArray(body), Charsets.UTF_8)
             code = if (status == 0) null else status
             success = error == null && status in 200..299
             result = if (error != null) error else text
@@ -35,7 +37,4 @@ object SimpleHttp {
         if (!success) debug("HTTP %s %s failed: %s %s", method, fullUrl, code, result)
         action(success, result, code)
     }
-
-    /** No sockets in a page, the LAN address can't be found from here */
-    fun getIpAddress(): String? = null
 }
