@@ -11,6 +11,7 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.reflect.full.declaredMemberProperties
 
 /**
  *  Notes:
@@ -32,6 +33,14 @@ class MediaFinderTests : IMediaFinder by IMediaFinder.Sounds() {
     fun `Sound finder finds Chimes`() {
         val chimes = findMedia(UncivSound.Chimes.fileName)
         Assert.assertNotNull(chimes)
+    }
+
+    @Test
+    fun `UncivSound builtins list every predefined sound`() {
+        val declared = UncivSound.Companion::class.declaredMemberProperties
+            .map { it.get(UncivSound.Companion) }
+            .filterIsInstance<UncivSound>()
+        Assert.assertEquals(declared, UncivSound.builtins)
     }
 
     @Test

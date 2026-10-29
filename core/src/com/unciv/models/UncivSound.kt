@@ -31,5 +31,12 @@ data class UncivSound(
         val Swap = UncivSound("swap")
         val Upgrade = UncivSound("upgrade")
         val Whoosh = UncivSound("whoosh")
+
+        /** All of the above, in declaration order. Spelled out because kotlin-reflect isn't available
+         *  everywhere (the web build); a test checks it against the actual properties. */
+        val builtins = listOf(
+            Bombard, Chimes, Choir, Click, Coin, Construction, Fire, Fortify, Notification1, Notification2,
+            Paper, Policy, Promote, Setup, Silent, Slider, Swap, Upgrade, Whoosh
+        )
     }
 }
