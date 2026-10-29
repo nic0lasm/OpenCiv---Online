@@ -1,5 +1,6 @@
 package com.unciv.logic.automation.civilization
 
+import com.unciv.utils.Concurrency
 import com.unciv.view.isAirUnit
 import com.unciv.view.isCivilian
 import com.unciv.view.isMilitary
@@ -448,6 +449,7 @@ object NextTurnAutomation {
             if (!unit.hasUnique(UniqueType.SpaceshipPart) && !unit.hasUnique(UniqueType.FoundCity)) continue
             if (!isStillOurUnit(unit, civView)) continue
             UnitAutomation.automateUnitMoves(unit, cache)
+            Concurrency.yieldIfBusy()
         }
 
         if (civView.cities().isNotEmpty()) automateSettlerEscorting(civView)
@@ -459,6 +461,8 @@ object NextTurnAutomation {
             if (unit.hasUnique(UniqueType.SpaceshipPart) || unit.hasUnique(UniqueType.FoundCity)) continue
             if (!isStillOurUnit(unit, civView)) continue
             UnitAutomation.automateUnitMoves(unit, cache)
+            // In the browser, lets the page repaint between units (Concurrency.yieldIfBusy does nothing elsewhere)
+            Concurrency.yieldIfBusy()
         }
     }
 

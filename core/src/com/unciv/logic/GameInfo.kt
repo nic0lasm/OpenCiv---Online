@@ -37,6 +37,7 @@ import com.unciv.ui.audio.MusicMood
 import com.unciv.ui.audio.MusicTrackChooserFlags
 import com.unciv.logic.files.FileConversions
 import com.unciv.ui.screens.worldscreen.status.NextTurnProgress
+import com.unciv.utils.Concurrency
 import com.unciv.utils.DebugUtils
 import com.unciv.utils.debug
 import com.unciv.utils.pseudoRandomUuid
@@ -439,9 +440,11 @@ class GameInfo : IsPartOfGameInfoSerialization, HasGameInfoSerializationVersion 
 
             // Starting preparations
             TurnManager(player).startTurn(progressBar)
+            Concurrency.yieldIfBusy()
 
             // Automation done here
             TurnManager(player).automateTurn()
+            Concurrency.yieldIfBusy()
 
             val worldScreen = UncivGame.Current.worldScreen
             // Do we need to break if player won?
@@ -459,6 +462,7 @@ class GameInfo : IsPartOfGameInfoSerialization, HasGameInfoSerializationVersion 
 
             // Clean up
             TurnManager(player).endTurn(progressBar)
+            Concurrency.yieldIfBusy()
 
             // To the next player
             setNextPlayer()

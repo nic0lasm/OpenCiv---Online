@@ -39,6 +39,13 @@ object Concurrency {
      *
      * @return null if an uncaught exception occurred
      */
+    /**
+     * Lets other work run if the current one has been going for a while. A no-op wherever threads exist: the
+     * browser version runs everything on the page's only thread, and calls to this inside long computations
+     * (the AI's turns) are where it can repaint the page in between.
+     */
+    fun yieldIfBusy() = ThreadPools.yieldIfBusy()
+
     fun <T> runBlocking(
         name: String? = null,
         context: CoroutineContext = Dispatcher.NON_DAEMON,
@@ -243,4 +250,7 @@ internal object ThreadPools {
         })
         return executor.asCoroutineDispatcher() to { executor.shutdown() }
     }
+
+    /** Real threads don't need to make room for other work - see [Concurrency.yieldIfBusy] */
+    fun yieldIfBusy() {}
 }
