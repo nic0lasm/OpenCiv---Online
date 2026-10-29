@@ -11,6 +11,10 @@ import com.unciv.utils.Log;
 public class WebLauncher {
 
     public static void main(String[] args) {
+        // Before anything touches kotlinx.coroutines: delay() and timeouts go to Dispatchers.Main (WebDispatcher,
+        // browser timers) instead of kotlinx' DefaultExecutor thread. That one waits with LockSupport.parkNanos,
+        // which can't block in a page, so it spun forever and took most of the page's time (about 2 fps).
+        System.setProperty("kotlinx.coroutines.main.delay", "true");
         Log.INSTANCE.setBackend(new WebLogBackend());
         Display.INSTANCE.setPlatform(new WebDisplay());
         Fonts.INSTANCE.setFontImplementation(new WebFont());
