@@ -31,6 +31,7 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
     private static final Set<String> patchedClasses = Set.of(
         "java.util.Locale",
         "java.util.UUID",
+        "java.util.concurrent.ThreadLocalRandom",
         "java.util.Base64$Encoder",
         "java.util.Base64$Decoder",
         "java.lang.reflect.Field",
@@ -41,12 +42,17 @@ public class UncivTeaVMPlugin implements TeaVMPlugin {
         "java.io.File",
         "java.nio.charset.Charset",
         "com.badlogic.gdx.graphics.Pixmap",
+        "com.badlogic.gdx.utils.reflect.Field",
         "kotlin.ExceptionsKt__ExceptionsKt"
     );
 
     private static final Set<String> replacingClasses = Set.of(
         // stackTraceToString: give the JavaScript stack, the Java one is empty
-        "kotlin.ExceptionsKt__ExceptionsKt"
+        "kotlin.ExceptionsKt__ExceptionsKt",
+        // Modifiers and generic element types, see the patch class
+        "com.badlogic.gdx.utils.reflect.Field",
+        // setSeed throws in TeaVM, which breaks the class' own static init
+        "java.util.concurrent.ThreadLocalRandom"
     );
 
     @Override
