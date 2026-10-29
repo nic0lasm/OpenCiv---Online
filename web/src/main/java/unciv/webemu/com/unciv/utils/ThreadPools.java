@@ -13,4 +13,9 @@ public final class ThreadPools {
     public Pair<CoroutineDispatcher, Function0<Unit>> create(String threadPrefix, boolean isDaemon) {
         return new Pair<>(WebDispatcher.INSTANCE, () -> Unit.INSTANCE);
     }
+
+    /** Lets the page repaint in the middle of long work, see WebDispatcher */
+    public void yieldIfBusy() {
+        WebDispatcher.INSTANCE.yieldIfBusy();
+    }
 }

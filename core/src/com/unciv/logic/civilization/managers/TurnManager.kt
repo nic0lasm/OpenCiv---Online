@@ -1,5 +1,6 @@
 package com.unciv.logic.civilization.managers
 
+import com.unciv.utils.Concurrency
 import com.unciv.view.GameView
 import com.unciv.UncivGame
 import com.unciv.logic.VictoryData
@@ -71,6 +72,7 @@ class TurnManager(val civInfo: Civilization) {
         for (city in civInfo.cities) {
             progressBar?.increment()
             CityTurnManager(city).startTurn()  // Most expensive part of startTurn
+            Concurrency.yieldIfBusy()
         }
 
         for (unit in civInfo.units.getCivUnits()) UnitTurnManager(unit).startTurn()
@@ -334,6 +336,7 @@ class TurnManager(val civInfo: Civilization) {
         for (city in civInfo.cities.sortedByDescending { it.isBeingRazed }) {
             progressBar?.increment()
             CityTurnManager(city).endTurn()
+            Concurrency.yieldIfBusy()
         }
 
         civInfo.temporaryUniques.endTurn()
