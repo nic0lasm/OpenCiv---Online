@@ -77,6 +77,14 @@ Core is unchanged in behaviour. The JVM-only parts are kept out of the browser b
   as on desktop.
 - **Platform classes**: `WebLauncher`, `WebGame`, `WebFont` (glyphs drawn on an offscreen 2D canvas, the browser
   does font fallback), `WebLogBackend` (browser console), `WebDisplay`.
+- **Save files**: `WebSaverLoader` is the `PlatformSaverLoader`. "Save to custom location" downloads the save
+  (a `Blob` behind an `<a download>`), "Load from custom location" opens a file picker and reads the file with
+  `FileReader` (`WebFileTransfer`). A page can't write back to a file it opened, so each save is a new download.
+- **Clipboard**: `WebSystemClipboard` wraps gdx-teavm's. Copying also goes to `navigator.clipboard` every time
+  (gdx-teavm's lost the first copy while it asked for permission), and reading asks `navigator.clipboard` when
+  it runs on `WebDispatcher`'s worker, where TeaVM's `@Async` can wait for the answer. That's where
+  "Load copied data" reads it, and the browser may ask the user first. Elsewhere, only text pasted with Ctrl+V on
+  the page is seen, as before.
 
 Small changes in core, all behaviour-preserving on the JVM:
 `Log.getTag` copes with an empty stack trace, `TranslationCache` copes with `DecimalFormat` returning null affixes,
@@ -91,6 +99,8 @@ plain path where `FileHandle.file()` isn't available.
 - Text rendering through the canvas font, mouse input
 - Starting a new single-player game, playing turns (a few dozen ms per turn on a small map at the start)
 - Autosaves, manual saves, the Load game screen and Resume, also after reloading the page
+- Exporting a save as a downloaded file and loading one from a file, copying a save to the clipboard and
+  loading it back from there, so games move between browsers and to or from desktop and Android
 - Settings kept across reloads
 - Network through `fetch()`: GitHub mod list, server checks, multiplayer game files
 - Creating an online multiplayer game, playing turns and getting updates from an UncivServer with CORS enabled
@@ -102,8 +112,7 @@ plain path where `FileHandle.file()` isn't available.
 - **Chat** goes through a WebSocket, which `WebHttpEngine` doesn't provide; the chat keeps trying to reconnect
   and logs errors. Same for anything else using ktor's WebSockets.
 - **Mod downloads**: the list shows, downloading a mod isn't tried yet (zip files written to local storage).
-- **Save files**: saves can't leave the browser yet. "Save to / Load from custom location" have no backend
-  (`PlatformSaverLoader.None`), only the clipboard works. Clearing site data deletes the saves.
+- **Save files**: saves in the browser's storage go away with the site data, export the ones to keep.
   No `FileType.External`, no `FileHandle.file()`: code outside the save path that calls it still throws.
 - **Turns**: next-turn computation still runs on the page's only thread, but it stops at `Concurrency.yieldIfBusy()`
   between players, cities and units to let the page repaint (see `WebDispatcher`). Measured on a Medium map with

@@ -1,5 +1,6 @@
 package com.unciv.app.web;
 
+import com.badlogic.gdx.utils.Clipboard;
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplication;
 import com.github.xpenatan.gdx.teavm.backends.web.WebApplicationConfiguration;
 import com.unciv.logic.files.UncivFiles;
@@ -18,7 +19,8 @@ public class WebLauncher {
         Log.INSTANCE.setBackend(new WebLogBackend());
         Display.INSTANCE.setPlatform(new WebDisplay());
         Fonts.INSTANCE.setFontImplementation(new WebFont());
-        // No file picker yet: saving/loading to a custom location stays disabled (PlatformSaverLoader.None)
+        // "Save to / Load from custom location" become a download and a file picker
+        UncivFiles.Companion.setSaverLoader(new WebSaverLoader());
         UncivFiles.Companion.setPreferExternalStorage(false);
 
         WebApplicationConfiguration config = new WebApplicationConfiguration();
@@ -29,6 +31,16 @@ public class WebLauncher {
         // Scene2d clipping relies on the stencil buffer
         config.stencil = true;
         config.useGL30 = true;
-        new WebApplication(new WebGame(), config);
+        new WebApplication(new WebGame(), config) {
+            private WebSystemClipboard systemClipboard;
+
+            @Override
+            public Clipboard getClipboard() {
+                Clipboard pageClipboard = super.getClipboard();
+                if (pageClipboard == null) return null; // Not created yet
+                if (systemClipboard == null) systemClipboard = new WebSystemClipboard(pageClipboard);
+                return systemClipboard;
+            }
+        };
     }
 }

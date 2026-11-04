@@ -67,6 +67,9 @@ object WebDispatcher : MainCoroutineDispatcher(), Delay {
         worker = null
     }
 
+    /** Whether the caller runs on the worker, the only place that can wait for the browser (TeaVM's @Async) */
+    fun isOnWorker() = worker != null && Thread.currentThread() === worker
+
     /**
      * Lets the page repaint if the worker has been busy for more than its slice.
      * Does nothing anywhere else than on the worker, which is the only place where TeaVM can suspend.
