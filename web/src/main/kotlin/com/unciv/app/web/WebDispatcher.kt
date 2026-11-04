@@ -15,21 +15,29 @@ import kotlin.coroutines.CoroutineContext
  * The browser has a single thread, so every dispatcher of the web build ends up here:
  * kotlinx' Dispatchers.Default/IO/Main as well as Unciv's own thread pools.
  *
- * Tasks are queued and run from a `setTimeout(0)` callback, a few milliseconds at a time
- * so the page keeps rendering while e.g. the rulesets load.
+ * Tasks are queued and run one after the other on a TeaVM green thread, the worker. Every [minSliceMillis]
+ * or so it sleeps for a moment, which hands the page back to the browser so it can repaint and run the render loop.
+ * A slice is never shorter than the browser's last turn (up to [maxSliceMillis]), so with a slow renderer
+ * (software WebGL can take 60 ms a frame) the work still gets half the time instead of being slowed down five times.
+ * Long tasks can do the same in the middle through [yieldIfBusy] (Concurrency.yieldIfBusy in core): that's what
+ * keeps the page alive while the AI plays its turns. Only the worker can be suspended that way, code called
+ * from the render loop or a browser callback runs to the end.
  */
 @OptIn(InternalCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 object WebDispatcher : MainCoroutineDispatcher(), Delay {
-    private const val sliceMillis = 25L
+    private const val minSliceMillis = 25L
+    private const val maxSliceMillis = 100L
 
     private val queue = ArrayDeque<Runnable>()
-    private var drainScheduled = false
+    private var worker: Thread? = null
+    private var sliceStart = 0L
+    private var sliceMillis = minSliceMillis
 
     override val immediate: MainCoroutineDispatcher get() = this
 
     override fun dispatch(context: CoroutineContext, block: Runnable) {
         queue.addLast(block)
-        scheduleDrain()
+        startWorker()
     }
 
     /** Runs the next queued task, if any. Used by the web version of runBlocking. */
@@ -43,15 +51,33 @@ object WebDispatcher : MainCoroutineDispatcher(), Delay {
         return true
     }
 
-    private fun scheduleDrain() {
-        if (drainScheduled) return
-        drainScheduled = true
-        Window.setTimeout({
-            drainScheduled = false
-            val end = System.currentTimeMillis() + sliceMillis
-            while (System.currentTimeMillis() < end && runNext()) Unit
-            if (queue.isNotEmpty()) scheduleDrain()
-        }, 0)
+    /** Starts the worker if it isn't running. It stops when the queue is empty, the next dispatch starts a new one. */
+    private fun startWorker() {
+        if (worker != null) return
+        val thread = Thread(::work, "WebDispatcher")
+        worker = thread
+        thread.start()
+    }
+
+    private fun work() {
+        sliceStart = System.currentTimeMillis()
+        sliceMillis = minSliceMillis
+        while (runNext()) yieldIfBusy()
+        // Nothing can run between the queue check above and this line, the page has only this thread
+        worker = null
+    }
+
+    /**
+     * Lets the page repaint if the worker has been busy for more than its slice.
+     * Does nothing anywhere else than on the worker, which is the only place where TeaVM can suspend.
+     */
+    fun yieldIfBusy() {
+        if (Thread.currentThread() !== worker) return
+        val now = System.currentTimeMillis()
+        if (now - sliceStart < sliceMillis) return
+        Thread.sleep(0)
+        sliceStart = System.currentTimeMillis()
+        sliceMillis = (sliceStart - now).coerceIn(minSliceMillis, maxSliceMillis)
     }
 
     override fun scheduleResumeAfterDelay(timeMillis: Long, continuation: CancellableContinuation<Unit>) {

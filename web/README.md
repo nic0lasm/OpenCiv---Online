@@ -38,8 +38,8 @@ Core is unchanged in behaviour. The JVM-only parts are kept out of the browser b
 - **Substitutions** (`UncivSubstitutionPolicy`, TeaVM's `SubstitutionPolicy`): class `a.b.C` is compiled as
   `unciv.webemu.a.b.C` instead. Used for
   - `kotlinx.coroutines.Dispatchers` and `runBlocking`: everything runs on the page's single thread through
-    `WebDispatcher` (a queue drained from `setTimeout`, a few ms at a time). `runBlocking` drains that queue until
-    its block is done.
+    `WebDispatcher`, a queue worked through by one TeaVM green thread that hands the page back to the browser
+    every 25 to 100 ms. `runBlocking` drains that queue until its block is done.
   - `com.unciv.utils.ThreadPools` and `com.unciv.logic.HttpEngine`, two small seams added to core for this:
     Concurrency's thread pools and the ktor engine (CIO on the JVM). In the browser, `WebHttpEngine` sends
     ktor's requests through `fetch()`.
@@ -105,8 +105,14 @@ plain path where `FileHandle.file()` isn't available.
 - **Save files**: saves can't leave the browser yet. "Save to / Load from custom location" have no backend
   (`PlatformSaverLoader.None`), only the clipboard works. Clearing site data deletes the saves.
   No `FileType.External`, no `FileHandle.file()`: code outside the save path that calls it still throws.
-- **Turns**: next-turn computation runs on the page's only thread, so the page freezes while the AI plays.
-  Fine on a small map early on; a Web Worker is the real fix.
+- **Turns**: next-turn computation still runs on the page's only thread, but it stops at `Concurrency.yieldIfBusy()`
+  between players, cities and units to let the page repaint (see `WebDispatcher`). Measured on a Medium map with
+  6 AIs and 6 city-states around turn 40, in Chrome on an M4: before, the page drew 1 or 2 frames per turn and
+  froze for the whole turn (about 330 ms, up to 690); now it draws 13 to 24, the longest gap is 55 ms (115 at
+  worst) and turns take the same time. With software WebGL a frame costs 60 ms or more and turns get about twice
+  as long. A single unit's moves, or anything else between two yield points, still runs in one piece, and the
+  world screen rebuilt after the turn is a separate freeze (WebGL `bufferData`/`readPixels`, seconds with
+  software rendering). A Web Worker would still be the real fix.
 - **runBlocking** can't wait for timers, network or GL-thread work; it throws instead of freezing the tab.
 - **Reflection** covers `com.unciv.models.**` and the game state. Code elsewhere that reflects on its own
   classes will fail with `NoSuchFieldException` and needs adding.
