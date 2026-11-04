@@ -20,6 +20,7 @@ import com.unciv.UncivGame
 import com.unciv.logic.map.*
 import com.unciv.logic.map.mapunit.movement.UnitMovement
 import com.unciv.models.UncivSound
+import com.unciv.view.CivView
 import com.unciv.view.ForeignCityView
 import com.unciv.view.GameView
 import com.unciv.view.MapUnitView
@@ -42,6 +43,7 @@ import com.unciv.ui.components.widgets.ZoomableScrollPane
 import com.unciv.ui.screens.basescreen.UncivStage
 import com.unciv.ui.screens.worldscreen.UndoHandler.Companion.recordUndoCheckpoint
 import com.unciv.ui.screens.worldscreen.WorldScreen
+import com.unciv.ui.screens.worldscreen.worldmap.WorldMapTileUpdater.updatePendingTiles
 import com.unciv.ui.screens.worldscreen.bottombar.BattleTableHelpers.battleAnimationDeferred
 import com.unciv.utils.Concurrency
 import com.unciv.utils.Log
@@ -62,6 +64,11 @@ class WorldMapHolder(
     internal val unitMovementPaths: HashMap<MapUnitView, ArrayList<TileView>> = HashMap()
 
     internal val unitConnectRoadPaths: HashMap<MapUnitView, List<TileView>> = HashMap()
+
+    /** Tiles whose first update [WorldMapTileUpdater.updateTiles] put off to the next frames, and for whom */
+    internal val tilesPendingUpdate = LinkedHashSet<WorldTileGroup>()
+    internal var pendingUpdateCivView: CivView? = null
+    internal var tilesUpdatedOnce = false
 
     private lateinit var tileGroupMap: TileGroupMap<WorldTileGroup>
 
@@ -751,6 +758,9 @@ class WorldMapHolder(
 
     // For debugging purposes
     override fun draw(batch: Batch?, parentAlpha: Float) = super.draw(batch, parentAlpha)
-    override fun act(delta: Float) = super.act(delta)
+    override fun act(delta: Float) {
+        super.act(delta)
+        updatePendingTiles()
+    }
     override fun clear() = super.clear()
 }

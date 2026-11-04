@@ -8,11 +8,15 @@ import com.unciv.view.isAutomatingRoadConnection
 import com.unciv.view.isMoving
 import com.unciv.view.isPreparingAirSweep
 import com.unciv.view.isPreparingParadrop
+import com.badlogic.gdx.Application
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.math.Rectangle
 import com.unciv.UncivGame
 import com.unciv.logic.automation.unit.CityLocationTileRanker
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.components.extensions.colorFromRGB
+import com.unciv.ui.components.tilegroups.TileGroup
 import com.unciv.view.AttackableTileView
 import com.unciv.view.CivView
 import com.unciv.view.ForeignCityView
@@ -21,12 +25,28 @@ import com.unciv.view.SpyView
 
 object WorldMapTileUpdater {
 
+    /** How long [updatePendingTiles] may spend per frame on tiles that aren't on screen */
+    private const val pendingTilesMillisPerFrame = 8L
+
     private val WorldMapHolder.tileMapView get() = worldScreen.selectedGameView.tileMapView
 
      fun WorldMapHolder.updateTiles(civView: CivView) {
         // General update of all tiles
-        for (tileGroup in tileGroups.values)
-            tileGroup.update(civView)
+        if (!tilesUpdatedOnce && Gdx.app.type == Application.ApplicationType.WebGL) {
+            // A new world screen (one per turn) builds every tile's images from scratch. In the browser that runs on
+            // the page's only thread, so do the tiles on screen now and the others over the next frames.
+            val area = getPriorityArea()
+            for (tileGroup in tileGroups.values) {
+                if (tileGroup.isIn(area)) tileGroup.update(civView)
+                else tilesPendingUpdate.add(tileGroup)
+            }
+        } else {
+            // Tiles still waiting for their first update stay in the queue, it's the expensive one
+            for (tileGroup in tileGroups.values)
+                if (tileGroup !in tilesPendingUpdate) tileGroup.update(civView)
+        }
+        pendingUpdateCivView = civView
+        tilesUpdatedOnce = true
 
         // Update tiles according to selected unit/city
         val unitTable = worldScreen.bottomUnitTable
@@ -56,6 +76,37 @@ object WorldMapTileUpdater {
 
         zoom(scaleX) // zoom to current scale, to set the size of the city buttons after "next turn"
     }
+
+    /**
+     * Updates the tiles [updateTiles] put off: all of those now on screen, then others until
+     * [pendingTilesMillisPerFrame] is spent. Once none are left, asks for a normal update, which puts the
+     * selection highlights on them too.
+     */
+    fun WorldMapHolder.updatePendingTiles() {
+        if (tilesPendingUpdate.isEmpty()) return
+        val civView = pendingUpdateCivView ?: return
+        val area = getPriorityArea()
+        val start = System.currentTimeMillis()
+        val iterator = tilesPendingUpdate.iterator()
+        while (iterator.hasNext()) {
+            val tileGroup = iterator.next()
+            if (!tileGroup.isIn(area) && System.currentTimeMillis() - start >= pendingTilesMillisPerFrame) continue
+            tileGroup.update(civView)
+            iterator.remove()
+        }
+        if (tilesPendingUpdate.isEmpty()) worldScreen.shouldUpdate = true
+    }
+
+    /** The part of the map on screen, plus a margin of a quarter screen around it */
+    private fun WorldMapHolder.getPriorityArea(): Rectangle {
+        val area = Rectangle()
+        getViewport(area)
+        val marginX = area.width / 4
+        val marginY = area.height / 4
+        return area.set(area.x - marginX, area.y - marginY, area.width + 2 * marginX, area.height + 2 * marginY)
+    }
+
+    private fun TileGroup.isIn(area: Rectangle) = area.contains(x + width / 2, y + height / 2)
 
     private fun WorldMapHolder.updateTilesForSelectedUnit(unitView: MapUnitView) {
         val tileGroup = tileGroups[unitView.getTile()] ?: return
