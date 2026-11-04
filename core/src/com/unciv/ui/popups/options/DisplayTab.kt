@@ -149,6 +149,7 @@ internal class DisplayTab(
 
     private fun addScreenModeSelectBox() {
         val modes = Display.getScreenModes()
+        if (modes.isEmpty()) return  // The browser has none, its window is the page
         val proxy = object {
             var value: ScreenMode
                 get() = modes[settings.screenMode] ?: modes.values.first()
